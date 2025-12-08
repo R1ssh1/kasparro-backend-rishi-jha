@@ -1,0 +1,47 @@
+#!/bin/bash
+set -e
+
+echo "=== Kasparro ETL Pipeline Startup ==="
+
+# Wait for database to be ready
+echo "Waiting for PostgreSQL..."
+until pg_isready -h ${DATABASE_HOST:-db} -p 5432 -U ${DATABASE_USER:-kasparro}; do
+  echo "PostgreSQL is unavailable - sleeping"
+  sleep 2
+done
+
+echo "PostgreSQL is up - checking connection..."
+
+# Test database connection with retry
+max_retries=30
+counter=0
+until PGPASSWORD=${DATABASE_PASSWORD:-kasparro} psql -h ${DATABASE_HOST:-db} -U ${DATABASE_USER:-kasparro} -d ${DATABASE_NAME:-kasparro} -c '\q' 2>/dev/null; do
+  counter=$((counter + 1))
+  if [ $counter -gt $max_retries ]; then
+    echo "Failed to connect to database after $max_retries attempts"
+    exit 1
+  fi
+  echo "Database not ready yet (attempt $counter/$max_retries)..."
+  sleep 2
+done
+
+echo "Database connection successful!"
+
+# Run migrations
+echo "Running database migrations..."
+if alembic upgrade head 2>&1 | tee /tmp/migration.log; then
+  echo "Migrations complete!"
+else
+  # Check if failure was due to tables already existing (concurrent migration)
+  if grep -q "already exists" /tmp/migration.log || grep -q "duplicate key" /tmp/migration.log; then
+    echo "Migrations already applied (concurrent execution), continuing..."
+  else
+    echo "Migration failed with unexpected error!"
+    cat /tmp/migration.log
+    exit 1
+  fi
+fi
+echo "Starting application: $@"
+
+# Execute the main command
+exec "$@"
