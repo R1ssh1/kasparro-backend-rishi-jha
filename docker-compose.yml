@@ -33,8 +33,8 @@ services:
       DATABASE_USER: kasparro
       DATABASE_PASSWORD: kasparro
       DATABASE_NAME: kasparro
-      COINGECKO_API_KEY: ${COINGECKO_API_KEY:-demo-key}
-      ADMIN_API_KEY: ${ADMIN_API_KEY:-admin-secret}
+      COINGECKO_API_KEY: ${COINGECKO_API_KEY}
+      ADMIN_API_KEY: ${ADMIN_API_KEY}
       APP_ENV: ${APP_ENV:-development}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       COINGECKO_RATE_LIMIT: ${COINGECKO_RATE_LIMIT:-30}
@@ -68,7 +68,7 @@ services:
       DATABASE_USER: kasparro
       DATABASE_PASSWORD: kasparro
       DATABASE_NAME: kasparro
-      COINGECKO_API_KEY: ${COINGECKO_API_KEY:-demo-key}
+      COINGECKO_API_KEY: ${COINGECKO_API_KEY}
       APP_ENV: ${APP_ENV:-development}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       COINGECKO_RATE_LIMIT: ${COINGECKO_RATE_LIMIT:-30}

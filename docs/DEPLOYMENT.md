@@ -172,8 +172,150 @@ aws events list-rules --name-prefix kasparro
 cd ../tests/smoke
 $env:API_URL = terraform output -raw api_endpoint
 $env:API_KEY = "YOUR_ADMIN_API_KEY"
+$env:SKIP_DOCKER_TESTS = "true"
 bash smoke_test.sh
 ```
+
+---
+
+## Cloud Demo Script
+
+**Quick demonstration of deployed infrastructure for evaluators.**
+
+### Prerequisites
+```powershell
+# Navigate to project directory
+cd kasparro-backend-rishi-jha
+
+# Ensure AWS CLI is configured
+aws sts get-caller-identity
+
+# Get API endpoint from Terraform
+cd terraform
+$API_ENDPOINT = terraform output -raw api_endpoint
+cd ..
+```
+
+### Demo 1: API Health & Data
+```powershell
+# Test API health
+curl "$API_ENDPOINT/health"
+# Expected: {"status":"healthy","database":"connected"}
+
+# Query cryptocurrency data
+curl "$API_ENDPOINT/data?limit=5"
+# Expected: JSON array with 5 cryptocurrency records
+
+# Check Prometheus metrics
+curl "$API_ENDPOINT/metrics" | Select-String "etl_runs_total"
+# Expected: Prometheus metrics showing ETL run counts
+```
+
+### Demo 2: EventBridge Cron Schedule
+```powershell
+# View EventBridge rule (hourly ETL trigger)
+aws events describe-rule --name kasparro-etl-schedule-production
+
+# Expected output:
+# {
+#   "Name": "kasparro-etl-schedule-production",
+#   "State": "ENABLED",
+#   "ScheduleExpression": "rate(1 hour)",
+#   "EventBusName": "default"
+# }
+
+# List recent rule executions (last hour)
+aws events list-rule-names-by-target --target-arn $(aws events list-targets-by-rule --rule kasparro-etl-schedule-production --query 'Targets[0].Arn' --output text)
+```
+
+### Demo 3: CloudWatch Logs (ETL Executions)
+```powershell
+# Tail worker logs (shows ETL executions)
+aws logs tail /ecs/kasparro-worker --follow --since 1h
+
+# Expected output shows:
+# - ETL start/completion messages
+# - Records processed counts
+# - CoinGecko API calls
+# - Database checkpoint updates
+
+# View last 10 log events
+aws logs tail /ecs/kasparro-worker --since 1h --format short | Select-Object -Last 10
+
+# Search for specific ETL run
+aws logs filter-log-events `
+  --log-group-name /ecs/kasparro-worker `
+  --filter-pattern "ETL completed" `
+  --max-items 5
+```
+
+### Demo 4: ECS Service Status
+```powershell
+# Check ECS cluster
+aws ecs describe-clusters --clusters kasparro-cluster
+
+# Check API service status
+aws ecs describe-services `
+  --cluster kasparro-cluster `
+  --services kasparro-api-service `
+  --query 'services[0].[serviceName,status,runningCount,desiredCount]' `
+  --output table
+
+# Expected:
+# --------------------------------
+# |   DescribeServices           |
+# +------------------------------+
+# |  kasparro-api-service        |
+# |  ACTIVE                      |
+# |  1                           |
+# |  1                           |
+# +------------------------------+
+
+# List running tasks
+aws ecs list-tasks --cluster kasparro-cluster --service-name kasparro-api-service
+
+# Get task details
+$TASK_ARN = aws ecs list-tasks --cluster kasparro-cluster --service-name kasparro-api-service --query 'taskArns[0]' --output text
+aws ecs describe-tasks --cluster kasparro-cluster --tasks $TASK_ARN --query 'tasks[0].[taskArn,lastStatus,healthStatus,cpu,memory]' --output table
+```
+
+### Demo 5: API Authentication
+```powershell
+# Test protected endpoint WITHOUT auth (should fail)
+curl "$API_ENDPOINT/stats"
+# Expected: 422 Unprocessable Entity
+
+# Test protected endpoint WITH auth (should succeed)
+curl -H "X-API-Key: YOUR_ADMIN_API_KEY" "$API_ENDPOINT/stats"
+# Expected: 200 OK with JSON statistics
+
+# Show ETL runs
+curl -H "X-API-Key: YOUR_ADMIN_API_KEY" "$API_ENDPOINT/runs" | ConvertFrom-Json | Select-Object -First 5
+# Expected: Array of recent ETL runs
+```
+
+### Demo 6: Run Comparison (Anomaly Detection)
+```powershell
+# Get recent run IDs
+$RUNS = curl -H "X-API-Key: YOUR_ADMIN_API_KEY" "$API_ENDPOINT/runs" | ConvertFrom-Json
+$RUN1 = $RUNS[0].run_id
+$RUN2 = $RUNS[1].run_id
+
+# Compare two runs for anomalies
+curl -H "X-API-Key: YOUR_ADMIN_API_KEY" "$API_ENDPOINT/compare-runs?run_id1=$RUN1&run_id2=$RUN2" | ConvertFrom-Json | Select-Object -ExpandProperty anomalies
+
+# Expected: JSON showing detected anomalies (if any)
+```
+
+### Demo 7: CloudWatch Dashboard (Optional)
+```powershell
+# If CloudWatch dashboard was created via Terraform:
+# View in AWS Console or via CLI
+
+aws cloudwatch get-dashboard --dashboard-name kasparro-metrics-production
+```
+
+---
 
 ## GitHub Actions Setup
 

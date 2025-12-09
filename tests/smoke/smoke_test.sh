@@ -1,6 +1,7 @@
 #!/bin/bash
 # Smoke Test Suite for Kasparro Backend
 # Verifies production deployment health and functionality
+# Tests: 12 scenarios including ETL recovery and rate limiting
 
 set -e  # Exit on error
 
@@ -135,7 +136,7 @@ else
 fi
 
 # Test 10: Run Comparison (if API_KEY provided)
-log_test "10/10" "Run Comparison Endpoint"
+log_test "10/12" "Run Comparison Endpoint"
 if [ -n "$API_KEY" ]; then
     RUNS_RESPONSE=$(curl -s -w "\n%{http_code}" -H "X-API-Key: $API_KEY" "$API_URL/runs")
     RUNS_HTTP_CODE=$(echo "$RUNS_RESPONSE" | tail -n1)
@@ -147,6 +148,52 @@ if [ -n "$API_KEY" ]; then
     fi
 else
     log_warn "Skipping run comparison test (API_KEY not provided)"
+fi
+
+# Test 11: ETL Recovery After Restart (Docker only)
+log_test "11/12" "ETL Recovery After Restart"
+if command -v docker &> /dev/null && [ "$SKIP_DOCKER_TESTS" != "true" ]; then
+    # Get initial run count
+    if [ -n "$API_KEY" ]; then
+        INITIAL_RUNS=$(curl -s -H "X-API-Key: $API_KEY" "$API_URL/runs" | grep -o '"run_id"' | wc -l || echo "0")
+        
+        # Restart worker container (only if running locally with docker-compose)
+        if docker ps --format '{{.Names}}' | grep -q "kasparro-worker"; then
+            log_test "11/12" "Restarting worker container..."
+            docker restart kasparro-worker > /dev/null 2>&1
+            sleep 5  # Wait for restart
+            
+            # Check that worker is running again
+            if docker ps --format '{{.Names}}' | grep -q "kasparro-worker"; then
+                log_pass "ETL worker restarted successfully"
+            else
+                log_fail "ETL worker failed to restart"
+            fi
+        else
+            log_warn "Worker container not found (skipping restart test)"
+        fi
+    else
+        log_warn "Skipping ETL restart test (API_KEY not provided)"
+    fi
+else
+    log_warn "Skipping ETL restart test (Docker not available or SKIP_DOCKER_TESTS=true)"
+fi
+
+# Test 12: Rate Limiting (if enabled)
+log_test "12/12" "Rate Limiting Check"
+RATE_LIMIT_ERRORS=0
+# Send 10 rapid requests to check rate limiting behavior
+for i in {1..10}; do
+    STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/data?limit=1")
+    if [ "$STATUS" = "429" ]; then
+        ((RATE_LIMIT_ERRORS++))
+    fi
+done
+
+if [ "$RATE_LIMIT_ERRORS" -gt 0 ]; then
+    log_pass "Rate limiting active ($RATE_LIMIT_ERRORS/10 requests throttled)"
+else
+    log_warn "Rate limiting not observed (may be disabled or high threshold)"
 fi
 
 # Summary

@@ -31,10 +31,7 @@ async def verify_api_key(x_api_key: str = Header(..., description="API key for a
         )
     
     if x_api_key != settings.admin_api_key:
-        logger.warning(
-            "Invalid API key attempt",
-            provided_key_prefix=x_api_key[:8] if x_api_key else None
-        )
+        logger.warning("Invalid API key attempt")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid API key",

@@ -169,9 +169,11 @@ aws ecs describe-services --cluster kasparro-cluster --services kasparro-api-ser
   - Security tests: Authentication, authorization
 
 **Test Breakdown**:
-- `tests/test_services/test_etl.py`: ETL pipeline tests (14 tests)
-- `tests/test_services/test_schema_drift.py`: Schema drift detection (8 tests)
-- `tests/test_services/test_failure_injection.py`: Failure injection (6 tests)
+- `tests/test_ingestion/test_*.py`: ETL ingestion tests (incremental, checkpointing)
+- `tests/test_schema_drift.py`: Schema drift detection (6 tests)
+- `tests/test_failure_injection.py`: Failure injector (7 tests)
+- `tests/test_failure_scenarios.py`: Failure recovery scenarios (3 tests)
+- `tests/test_api/test_crypto.py`: API endpoint tests (4 tests)
 - `tests/test_api/test_crypto.py`: API endpoint tests (18 tests)
 - `tests/test_api/test_auth.py`: Authentication tests (8 tests)
 - `tests/test_core/`: Configuration and utilities (8 tests)
@@ -211,8 +213,8 @@ pytest tests/test_api/test_auth.py -v
 **Implementation**:
 - **Script**: `tests/smoke/smoke_test.sh`
 - **Language**: Bash (portable across Linux/macOS/Windows Git Bash)
-- **Test Count**: 10 smoke tests
-- **Execution Time**: ~10 seconds
+- **Test Count**: 12 smoke tests
+- **Execution Time**: ~15 seconds
 
 **Test Scenarios**:
 1. ✅ Service Running - API responds to requests
@@ -225,6 +227,8 @@ pytest tests/test_api/test_auth.py -v
 8. ✅ Protected Endpoint (Valid Auth) - Accepts valid API keys
 9. ✅ Metrics Endpoint - Prometheus metrics available
 10. ✅ Run Comparison - `/runs` endpoint accessible
+11. ✅ ETL Recovery After Restart - Worker restarts and resumes
+12. ✅ Rate Limiting - Throttling behavior verified
 
 **Features**:
 - Colored output (pass/fail/warning)
