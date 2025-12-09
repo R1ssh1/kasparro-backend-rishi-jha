@@ -99,51 +99,17 @@ resource "aws_route_table_association" "public" {
 }
 
 # Security Groups
-resource "aws_security_group" "alb" {
-  name_prefix = "kasparro-alb-"
-  description = "Security group for Application Load Balancer"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "HTTP from anywhere"
-  }
-
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "HTTPS from anywhere"
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow all outbound"
-  }
-
-  tags = {
-    Name = "kasparro-alb-sg"
-  }
-}
-
 resource "aws_security_group" "ecs_tasks" {
   name_prefix = "kasparro-ecs-tasks-"
   description = "Security group for ECS tasks"
   vpc_id      = aws_vpc.main.id
 
   ingress {
-    from_port       = 8000
-    to_port         = 8000
-    protocol        = "tcp"
-    security_groups = [aws_security_group.alb.id]
-    description     = "Allow traffic from ALB"
+    from_port   = 8000
+    to_port     = 8000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow HTTP from anywhere"
   }
 
   egress {
@@ -197,7 +163,7 @@ resource "aws_db_subnet_group" "main" {
 resource "aws_db_instance" "postgres" {
   identifier        = "kasparro-postgres"
   engine            = "postgres"
-  engine_version    = "15.5"
+  engine_version    = "15.10"
   instance_class    = var.db_instance_class
   allocated_storage = 20
   storage_type      = "gp3"
@@ -395,54 +361,6 @@ resource "aws_ecs_task_definition" "api" {
   }
 }
 
-# Application Load Balancer
-resource "aws_lb" "main" {
-  name               = "kasparro-alb"
-  internal           = false
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.alb.id]
-  subnets            = aws_subnet.public[*].id
-
-  enable_deletion_protection = var.environment == "production"
-
-  tags = {
-    Name = "kasparro-alb"
-  }
-}
-
-resource "aws_lb_target_group" "api" {
-  name        = "kasparro-api-tg"
-  port        = 8000
-  protocol    = "HTTP"
-  vpc_id      = aws_vpc.main.id
-  target_type = "ip"
-
-  health_check {
-    enabled             = true
-    healthy_threshold   = 2
-    unhealthy_threshold = 3
-    timeout             = 5
-    interval            = 30
-    path                = "/health"
-    matcher             = "200"
-  }
-
-  tags = {
-    Name = "kasparro-api-tg"
-  }
-}
-
-resource "aws_lb_listener" "http" {
-  load_balancer_arn = aws_lb.main.arn
-  port              = "80"
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.api.arn
-  }
-}
-
 # ECS Service
 resource "aws_ecs_service" "api" {
   name            = "kasparro-api-service"
@@ -457,14 +375,7 @@ resource "aws_ecs_service" "api" {
     assign_public_ip = true
   }
 
-  load_balancer {
-    target_group_arn = aws_lb_target_group.api.arn
-    container_name   = "api"
-    container_port   = 8000
-  }
-
   depends_on = [
-    aws_lb_listener.http,
     aws_iam_role_policy_attachment.ecs_task_execution
   ]
 

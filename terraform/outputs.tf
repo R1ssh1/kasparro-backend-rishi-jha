@@ -1,12 +1,20 @@
-# API Endpoint
-output "api_endpoint" {
-  description = "Public API endpoint URL"
-  value       = "http://${aws_lb.main.dns_name}"
-}
-
-output "api_endpoint_https" {
-  description = "HTTPS API endpoint (requires SSL certificate setup)"
-  value       = "https://${aws_lb.main.dns_name}"
+# API Access Instructions
+output "api_access_instructions" {
+  description = "How to access the API after deployment"
+  value       = <<-EOT
+    The API is deployed without a load balancer to minimize costs.
+    To access the API, get the ECS task's public IP:
+    
+    1. List tasks:
+       aws ecs list-tasks --cluster ${aws_ecs_cluster.main.name} --service-name ${aws_ecs_service.api.name}
+    
+    2. Get task details:
+       aws ecs describe-tasks --cluster ${aws_ecs_cluster.main.name} --tasks <TASK_ARN>
+    
+    3. Extract public IP from task network interface
+    
+    4. Access API at: http://<PUBLIC_IP>:8000/health
+  EOT
 }
 
 # Database
@@ -69,10 +77,15 @@ output "next_steps" {
     
     🎉 Deployment Complete!
     
-    API Endpoint: http://${aws_lb.main.dns_name}
+    ⚠️  Note: Deployed without ALB to save costs (~$16/month)
+    
+    Get API Public IP:
+    1. aws ecs list-tasks --cluster ${aws_ecs_cluster.main.name} --service-name ${aws_ecs_service.api.name}
+    2. aws ecs describe-tasks --cluster ${aws_ecs_cluster.main.name} --tasks <TASK_ARN>
+    3. Find public IP in network interface details
     
     Next Steps:
-    1. Test health endpoint: curl http://${aws_lb.main.dns_name}/health
+    1. Test health endpoint: curl http://<PUBLIC_IP>:8000/health
     2. View logs: aws logs tail /ecs/kasparro-api --follow
     3. Check ECS tasks: aws ecs list-tasks --cluster ${aws_ecs_cluster.main.name}
     4. View metrics: AWS Console → CloudWatch → Log groups → /ecs/kasparro-api
