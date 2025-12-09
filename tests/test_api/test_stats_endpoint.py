@@ -3,6 +3,7 @@ import pytest
 from httpx import AsyncClient
 from datetime import datetime, timezone
 from core.models import ETLRun
+from core.config import settings
 from api.main import app
 
 
@@ -46,7 +47,10 @@ async def test_stats_endpoint(db_session):
     await db_session.commit()
 
     async with AsyncClient(app=app, base_url="http://test") as client:
-        response = await client.get("/stats")
+        response = await client.get(
+            "/stats",
+            headers={"X-API-Key": settings.admin_api_key}
+        )
     
     assert response.status_code == 200
     data = response.json()
@@ -114,7 +118,10 @@ async def test_stats_endpoint_filter_by_source(db_session):
     await db_session.commit()
 
     async with AsyncClient(app=app, base_url="http://test") as client:
-        response = await client.get("/stats?source=coingecko")
+        response = await client.get(
+            "/stats?source=coingecko",
+            headers={"X-API-Key": settings.admin_api_key}
+        )
     
     assert response.status_code == 200
     data = response.json()
@@ -149,7 +156,10 @@ async def test_stats_endpoint_limit_recent_runs(db_session):
     await db_session.commit()
     
     async with AsyncClient(app=app, base_url="http://test") as client:
-        response = await client.get("/stats?limit=3")
+        response = await client.get(
+            "/stats?limit=3",
+            headers={"X-API-Key": settings.admin_api_key}
+        )
     
     assert response.status_code == 200
     data = response.json()
@@ -162,7 +172,10 @@ async def test_stats_endpoint_limit_recent_runs(db_session):
 async def test_stats_endpoint_empty_database():
     """Test /stats endpoint returns valid structure even with existing data."""
     async with AsyncClient(app=app, base_url="http://test") as client:
-        response = await client.get("/stats")
+        response = await client.get(
+            "/stats",
+            headers={"X-API-Key": settings.admin_api_key}
+        )
     
     assert response.status_code == 200
     data = response.json()
