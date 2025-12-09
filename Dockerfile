@@ -33,11 +33,12 @@ ENV PATH=/root/.local/bin:$PATH
 # Copy application code
 COPY . .
 
-# Copy and set entrypoint
-COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
+# Copy and set both entrypoints (API and worker use different ones)
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+COPY docker-entrypoint-worker.sh /app/docker-entrypoint-worker.sh
+RUN chmod +x /app/docker-entrypoint.sh /app/docker-entrypoint-worker.sh
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 
 # Default command (can be overridden in docker-compose)
 CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]

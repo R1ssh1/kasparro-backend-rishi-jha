@@ -1,6 +1,7 @@
 """Test configuration and fixtures."""
 import pytest
 import asyncio
+import os
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.pool import NullPool
@@ -8,8 +9,9 @@ from sqlalchemy.pool import NullPool
 from core.database import Base
 from core.config import settings
 
-# Test database URL
-TEST_DATABASE_URL = "postgresql+asyncpg://kasparro:kasparro@localhost:5432/kasparro_test"
+# Test database URL - use 'db' when in Docker, 'localhost' otherwise
+DB_HOST = os.getenv("DATABASE_HOST", "localhost")
+TEST_DATABASE_URL = f"postgresql+asyncpg://kasparro:kasparro@{DB_HOST}:5432/kasparro"
 
 
 @pytest.fixture(scope="session")

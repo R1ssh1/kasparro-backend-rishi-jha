@@ -1,5 +1,6 @@
 """Tests for failure scenarios and error handling."""
 import pytest
+import httpx
 from unittest.mock import AsyncMock, patch
 from sqlalchemy.exc import OperationalError
 from ingestion.coingecko import CoinGeckoIngestion
@@ -30,7 +31,7 @@ async def test_api_request_retry_on_failure(db_session):
         nonlocal call_count
         call_count += 1
         if call_count < 3:
-            raise Exception("Network error")
+            raise httpx.HTTPError("Network error")
         return mock_response
     
     with patch('httpx.AsyncClient.get', side_effect=mock_get):

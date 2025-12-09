@@ -59,6 +59,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: kasparro-worker
+    entrypoint: ["/app/docker-entrypoint-worker.sh"]
     command: python -m worker.scheduler
     environment:
       DATABASE_URL: postgresql+asyncpg://kasparro:kasparro@db:5432/kasparro
@@ -74,6 +75,8 @@ services:
       ETL_SCHEDULE_MINUTES: ${ETL_SCHEDULE_MINUTES:-60}
     depends_on:
       db:
+        condition: service_healthy
+      api:
         condition: service_healthy
     volumes:
       - ./data:/app/data

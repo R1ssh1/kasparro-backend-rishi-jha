@@ -27,19 +27,13 @@ done
 
 echo "Database connection successful!"
 
-# Run migrations
+# Run migrations (only API service uses this entrypoint)
 echo "Running database migrations..."
-if alembic upgrade head 2>&1 | tee /tmp/migration.log; then
+if alembic upgrade head; then
   echo "Migrations complete!"
 else
-  # Check if failure was due to tables already existing (concurrent migration)
-  if grep -q "already exists" /tmp/migration.log || grep -q "duplicate key" /tmp/migration.log; then
-    echo "Migrations already applied (concurrent execution), continuing..."
-  else
-    echo "Migration failed with unexpected error!"
-    cat /tmp/migration.log
-    exit 1
-  fi
+  echo "Migration failed!"
+  exit 1
 fi
 echo "Starting application: $@"
 
