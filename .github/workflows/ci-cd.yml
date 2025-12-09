@@ -47,7 +47,8 @@ jobs:
       
       - name: Run database migrations
         env:
-          DATABASE_URL: postgresql://kasparro:kasparro@localhost:5432/kasparro
+          DATABASE_URL: postgresql+asyncpg://kasparro:kasparro@localhost:5432/kasparro
+          DATABASE_URL_SYNC: postgresql://kasparro:kasparro@localhost:5432/kasparro
           COINGECKO_API_KEY: test_key
           ADMIN_API_KEY: test-api-key-for-ci
         run: |
