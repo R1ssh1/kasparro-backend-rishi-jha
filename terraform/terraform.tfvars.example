@@ -1,0 +1,18 @@
+# Example Terraform Variables
+# Copy this file to terraform.tfvars and fill in your values
+
+# AWS Configuration
+aws_region  = "us-east-1"
+environment = "development"
+
+# Database (use strong password in production!)
+db_password = "CHANGE_ME_STRONG_PASSWORD_HERE"
+
+# API Keys (get from your providers)
+coingecko_api_key = "your_coingecko_api_key_here"
+admin_api_key     = "your_admin_api_key_here"  # Generate: openssl rand -hex 32
+
+# Optional: Override defaults
+# db_instance_class = "db.t3.micro"  # Free tier
+# api_task_count = 1
+# docker_image = "ghcr.io/r1ssh1/kasparro-backend-rishi-jha:latest"

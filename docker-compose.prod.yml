@@ -1,0 +1,74 @@
+# Production Docker Compose Override
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+
+version: '3.8'
+
+services:
+  api:
+    image: ghcr.io/r1ssh1/kasparro-backend-rishi-jha:latest
+    environment:
+      - APP_ENV=production
+      - LOG_LEVEL=INFO
+      # Use external database in production
+      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL_SYNC=${DATABASE_URL_SYNC}
+    secrets:
+      - coingecko_api_key
+      - admin_api_key
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  worker:
+    image: ghcr.io/r1ssh1/kasparro-backend-rishi-jha:latest
+    environment:
+      - APP_ENV=production
+      - LOG_LEVEL=INFO
+      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL_SYNC=${DATABASE_URL_SYNC}
+    secrets:
+      - coingecko_api_key
+      - admin_api_key
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Remove db service - use external RDS in production
+  db:
+    image: postgres:15-alpine
+    profiles:
+      - development # Only start in dev mode
+
+secrets:
+  coingecko_api_key:
+    external: true
+  admin_api_key:
+    external: true
