@@ -49,6 +49,7 @@ jobs:
         env:
           DATABASE_URL: postgresql://kasparro:kasparro@localhost:5432/kasparro
           COINGECKO_API_KEY: test_key
+          ADMIN_API_KEY: test-api-key-for-ci
         run: |
           alembic upgrade head
       
@@ -56,6 +57,7 @@ jobs:
         env:
           DATABASE_URL: postgresql+asyncpg://kasparro:kasparro@localhost:5432/kasparro
           COINGECKO_API_KEY: test_key
+          ADMIN_API_KEY: test-api-key-for-ci
         run: |
           pytest tests/ -v --cov=. --cov-report=xml --cov-report=term-missing
       
