@@ -59,7 +59,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: kasparro-worker
-    entrypoint: ["/app/docker-entrypoint-worker.sh"]
+    entrypoint: [ "/app/docker-entrypoint-worker.sh" ]
     command: python -m worker.scheduler
     environment:
       DATABASE_URL: postgresql+asyncpg://kasparro:kasparro@db:5432/kasparro

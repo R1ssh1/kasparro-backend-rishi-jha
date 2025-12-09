@@ -48,16 +48,29 @@ class CoinGeckoIngestion(BaseIngestion):
         """
         # Acquire rate limit token
         await self.rate_limiter.acquire()
-        
+
         url = f"{self.BASE_URL}{endpoint}"
+
+        # Copy params so we can safely mutate
+        params = dict(params) if params is not None else {}
+
+        # For the free CoinGecko demo API, usage on the
+        # developers dashboard is tracked when the key is
+        # provided as the x_cg_demo_api_key query parameter.
+        if self.api_key:
+            params.setdefault("x_cg_demo_api_key", self.api_key)
+
         headers = {
             "x-cg-demo-api-key": self.api_key,
-            "Accept": "application/json"
+            "Accept": "application/json",
         }
-        
+
         async with httpx.AsyncClient(timeout=30.0) as client:
-            self.logger.info(f"Making request to {endpoint}", extra={"params": params})
-            
+            self.logger.info(
+                f"Making request to {endpoint}",
+                extra={"params": params},
+            )
+
             response = await client.get(url, headers=headers, params=params)
             
             if response.status_code == 429:
