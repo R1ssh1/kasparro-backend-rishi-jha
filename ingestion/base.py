@@ -3,15 +3,18 @@ import uuid
 import structlog
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Set
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, insert
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 from core.models import RawCoinData, Coin, ETLCheckpoint, ETLRun
+from core.config import settings
 from schemas.ingestion import NormalizedCoin
 from ingestion.rate_limiter import rate_limiter_registry
+from core.schema_drift import SchemaDriftDetector
+from core.failure_injector import failure_injector, FailureType
 
 logger = structlog.get_logger()
 
@@ -31,6 +34,31 @@ class BaseIngestion(ABC):
         self.session = session
         self.run_id = str(uuid.uuid4())
         self.logger = logger.bind(run_id=self.run_id, source=source_name)
+        self.drift_detector = SchemaDriftDetector(source_name, session)
+        
+        # Configure failure injector from settings
+        if settings.enable_failure_injection:
+            failure_injector.enabled = True
+            failure_injector.configure(
+                probability=settings.failure_probability,
+                failure_type=FailureType.DATABASE_ERROR,
+                fail_at_record=settings.fail_at_record
+            )
+            self.logger.warning(
+                "Failure injection enabled",
+                probability=settings.failure_probability,
+                fail_at_record=settings.fail_at_record
+            )
+    
+    def get_expected_schema(self) -> Optional[Set[str]]:
+        """
+        Get expected field names for this source's schema.
+        Override in subclasses to enable drift detection.
+        
+        Returns:
+            Set of expected field names or None
+        """
+        return None
     
     @abstractmethod
     async def fetch_data(self, checkpoint: Optional[str] = None) -> List[Dict[str, Any]]:
@@ -208,12 +236,41 @@ class BaseIngestion(ABC):
         Returns:
             Number of records processed
         """
+        # Schema drift detection (if schema defined)
+        expected_schema = self.get_expected_schema()
+        if expected_schema and raw_records:
+            schema_name = f"{self.source_name}_schema"
+            self.drift_detector.register_schema(schema_name, expected_schema)
+            
+            # Analyze batch for drift
+            drift_report = await self.drift_detector.analyze_batch(
+                schema_name=schema_name,
+                records=raw_records,
+                run_id=self.run_id,
+                sample_size=10
+            )
+            
+            if drift_report.get("drift_detected"):
+                self.logger.warning(
+                    "Schema drift detected during ingestion",
+                    drift_ratio=drift_report.get("drift_ratio"),
+                    warnings=drift_report.get("warnings")
+                )
+        
         # Save raw data
         await self.save_raw_data(raw_records)
         
+        # Inject failure BEFORE normalization (mid-run failure)
+        if len(raw_records) > 0:
+            mid_point = len(raw_records) // 2
+            failure_injector.inject_if_enabled(
+                record_index=mid_point,
+                message=f"Injected failure during {self.source_name} ingestion at record {mid_point}"
+            )
+        
         # Normalize and validate
         normalized_records = []
-        for raw in raw_records:
+        for idx, raw in enumerate(raw_records, start=1):
             normalized = self.normalize_record(raw)
             if normalized:
                 normalized_records.append(normalized)

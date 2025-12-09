@@ -1,6 +1,6 @@
 """CoinGecko API data ingestion."""
 import httpx
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Set
 from decimal import Decimal
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
@@ -22,6 +22,13 @@ class CoinGeckoIngestion(BaseIngestion):
             "coingecko",
             settings.coingecko_rate_limit
         )
+    
+    def get_expected_schema(self) -> Optional[Set[str]]:
+        """Return expected CoinGecko API field names."""
+        return {
+            "id", "symbol", "name", "current_price", "market_cap",
+            "total_volume", "price_change_percentage_24h", "last_updated"
+        }
     
     @retry(
         stop=stop_after_attempt(3),

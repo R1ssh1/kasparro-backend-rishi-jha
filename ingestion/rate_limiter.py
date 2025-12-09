@@ -55,3 +55,17 @@ class RateLimiterRegistry:
 
 # Global registry
 rate_limiter_registry = RateLimiterRegistry()
+
+
+def get_rate_limiter(source: str, calls_per_minute: int) -> RateLimiter:
+    """
+    Get a rate limiter for a specific source.
+    
+    Args:
+        source: Name of the data source
+        calls_per_minute: Maximum calls per minute
+        
+    Returns:
+        RateLimiter instance for the source
+    """
+    return rate_limiter_registry.get_limiter(source, calls_per_minute)

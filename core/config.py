@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     # ETL Schedule
     etl_schedule_minutes: int = 60
     
+    # Failure Injection (for testing)
+    enable_failure_injection: bool = False
+    failure_probability: float = 0.0
+    fail_at_record: Optional[int] = None
+    
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

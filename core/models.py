@@ -100,3 +100,29 @@ class ETLRun(Base):
     __table_args__ = (
         Index('ix_etl_runs_source_started_at', 'source', 'started_at'),
     )
+
+
+class SchemaDriftLog(Base):
+    """Logs detected schema drift events."""
+    
+    __tablename__ = "schema_drift_logs"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    source = Column(String(50), nullable=False, index=True)
+    run_id = Column(String(36), index=True)
+    schema_name = Column(String(100), nullable=False)
+    confidence_score = Column(Numeric(5, 3))  # 0.000 to 1.000
+    missing_fields = Column(JSON)  # List of missing field names
+    extra_fields = Column(JSON)  # List of unexpected field names
+    fuzzy_matches = Column(JSON)  # Dict of possible field renames
+    warnings = Column(JSON)  # List of warning messages
+    detected_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        index=True
+    )
+    
+    __table_args__ = (
+        Index('ix_schema_drift_source_detected', 'source', 'detected_at'),
+    )

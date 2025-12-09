@@ -1,7 +1,7 @@
 """Schemas for ingestion data validation."""
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, field_validator
 
 
@@ -63,3 +63,29 @@ class NormalizedCoin(BaseModel):
     volume_24h: Optional[Decimal] = None
     price_change_24h: Optional[Decimal] = None
     last_updated: datetime
+
+
+class RSSFeedAuthor(BaseModel):
+    """RSS feed author model."""
+    name: str
+
+
+class RSSFeedRecord(BaseModel):
+    """Validation schema for RSS feed JSON items."""
+    
+    id: str
+    url: str
+    title: str
+    content_text: Optional[str] = None
+    content_html: Optional[str] = None
+    date_published: str
+    authors: Optional[List[RSSFeedAuthor]] = None
+    image: Optional[str] = None
+    
+    @field_validator('date_published')
+    @classmethod
+    def normalize_timezone(cls, v: str) -> str:
+        """Validate ISO8601 timestamp - keep as string for now."""
+        # Pydantic will handle validation, we'll parse in normalize_record
+        return v
+

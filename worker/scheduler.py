@@ -7,6 +7,7 @@ from core.config import settings
 from core.database import AsyncSessionLocal
 from ingestion.coingecko import CoinGeckoIngestion
 from ingestion.csv_loader import CSVIngestion
+from ingestion.rss_feed import RSSFeedIngestion
 
 # Configure structured logging
 structlog.configure(
@@ -42,6 +43,16 @@ async def run_etl_pipeline():
             logger.info("CSV ingestion completed")
         except Exception as e:
             logger.error(f"CSV ingestion failed: {str(e)}", exc_info=True)
+    
+    async with AsyncSessionLocal() as session:
+        # Run RSS feed ingestion
+        try:
+            logger.info("Starting RSS feed ingestion")
+            rss_feed = RSSFeedIngestion(session)
+            await rss_feed.run()
+            logger.info("RSS feed ingestion completed")
+        except Exception as e:
+            logger.error(f"RSS feed ingestion failed: {str(e)}", exc_info=True)
     
     logger.info("ETL pipeline run completed")
 
