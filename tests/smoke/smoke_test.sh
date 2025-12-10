@@ -3,7 +3,8 @@
 # Verifies production deployment health and functionality
 # Tests: 12 scenarios including ETL recovery and rate limiting
 
-set -e  # Exit on error
+# Don't exit on error - we want to run all tests and report at the end
+set +e
 
 # Configuration
 API_URL="${API_URL:-http://localhost:8000}"
