@@ -212,7 +212,7 @@
                 <div class="sub-value">RSS Feed Source</div>
             </div>
             <div class="stat-card">
-                <h3>Portfolios</h3>
+                <h3>CSV Data Records</h3>
                 <div class="value" id="totalPortfolios">-</div>
                 <div class="sub-value">CSV Source</div>
             </div>
@@ -249,16 +249,16 @@
             </div>
         </div>
 
-        <!-- Portfolios Tab -->
+        <!-- CSV Data Tab -->
         <div id="portfolios-tab" class="tab-content">
             <div class="chart-container">
-                <h2>Portfolio Distribution</h2>
+                <h2>CSV Data Distribution</h2>
                 <canvas id="portfolioChart"></canvas>
             </div>
 
             <div class="data-table">
-                <h2>Crypto Portfolios</h2>
-                <div id="portfoliosTable" class="loading">Loading portfolio data...</div>
+                <h2>CSV Cryptocurrency Data</h2>
+                <div id="portfoliosTable" class="loading">Loading CSV data...</div>
             </div>
         </div>
     </div>
@@ -419,21 +419,23 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Portfolio Name</th>
                                     <th>Symbol</th>
-                                    <th>External ID</th>
-                                    <th>Price/Value</th>
+                                    <th>Name</th>
+                                    <th>Price (USD)</th>
+                                    <th>Market Cap</th>
+                                    <th>24h Volume</th>
                                     <th>Last Updated</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${data.data.map(portfolio => `
+                                ${data.data.map(coin => `
                                     <tr>
-                                        <td><strong>${portfolio.name || 'N/A'}</strong></td>
-                                        <td>${portfolio.symbol}</td>
-                                        <td style="font-size: 0.8em;">${portfolio.external_id}</td>
-                                        <td>$${parseFloat(portfolio.current_price || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                                        <td>${new Date(portfolio.last_updated).toLocaleString()}</td>
+                                        <td><strong>${coin.symbol}</strong></td>
+                                        <td>${coin.name || 'N/A'}</td>
+                                        <td>$${parseFloat(coin.current_price || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                                        <td>$${parseFloat(coin.market_cap || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}</td>
+                                        <td>$${parseFloat(coin.volume_24h || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}</td>
+                                        <td>${new Date(coin.last_updated).toLocaleString()}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -442,12 +444,12 @@
 
                     document.getElementById('portfoliosTable').innerHTML = tableHtml;
 
-                    // Portfolio chart
+                    // CSV data chart - market cap comparison
                     const chartData = {
-                        labels: data.data.map(p => p.name || p.external_id),
+                        labels: data.data.map(c => c.symbol),
                         datasets: [{
-                            label: 'Portfolio Value (USD)',
-                            data: data.data.map(p => parseFloat(p.current_price || 0)),
+                            label: 'Market Cap (USD)',
+                            data: data.data.map(c => parseFloat(c.market_cap || 0)),
                             backgroundColor: '#667eea'
                         }]
                     };

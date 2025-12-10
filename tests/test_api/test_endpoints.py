@@ -56,12 +56,10 @@ async def test_data_endpoint_filtering():
 
 @pytest.mark.asyncio
 async def test_root_endpoint():
-    """Test root endpoint."""
+    """Test root endpoint returns dashboard HTML."""
     async with AsyncClient(app=app, base_url="http://test") as client:
         response = await client.get("/")
         
         assert response.status_code == 200
-        data = response.json()
-        
-        assert data["service"] == "Kasparro Crypto Data API"
-        assert data["version"] == "1.0.0"
+        assert "text/html" in response.headers["content-type"]
+        assert b"Kasparro Crypto Dashboard" in response.content
