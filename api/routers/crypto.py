@@ -99,6 +99,106 @@ async def get_crypto_data(
     )
 
 
+@router.get("/rss-feed", response_model=CoinDataResponse)
+async def get_rss_feed_data(
+    request: Request,
+    page: int = Query(1, ge=1, description="Page number (must be >= 1)"),
+    per_page: int = Query(50, ge=1, le=100, description="Items per page (1-100)"),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get cryptocurrency news from RSS feed source.
+    
+    Returns news articles aggregated from cryptocurrency RSS feeds with pagination.
+    Data includes article titles, external IDs, and timestamps.
+    """
+    start_time = time.time()
+    
+    # Build query for RSS feed source only
+    query = select(Coin).where(Coin.source == "rss_feed").order_by(desc(Coin.last_updated))
+    
+    # Get total count
+    count_query = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_query)
+    total_items = total_result.scalar_one()
+    
+    # Calculate pagination
+    total_pages = (total_items + per_page - 1) // per_page
+    offset = (page - 1) * per_page
+    
+    # Apply pagination
+    query = query.limit(per_page).offset(offset)
+    
+    # Execute query
+    result = await db.execute(query)
+    coins = result.scalars().all()
+    
+    # Calculate latency
+    latency_ms = (time.time() - start_time) * 1000
+    
+    return CoinDataResponse(
+        request_id=request.state.request_id,
+        api_latency_ms=round(latency_ms, 2),
+        data=[CoinResponse.model_validate(coin) for coin in coins],
+        pagination=PaginationMetadata(
+            page=page,
+            per_page=per_page,
+            total_items=total_items,
+            total_pages=total_pages
+        )
+    )
+
+
+@router.get("/csv-data", response_model=CoinDataResponse)
+async def get_csv_data(
+    request: Request,
+    page: int = Query(1, ge=1, description="Page number (must be >= 1)"),
+    per_page: int = Query(50, ge=1, le=100, description="Items per page (1-100)"),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get cryptocurrency data from CSV file source.
+    
+    Returns historical cryptocurrency data loaded from CSV files with pagination.
+    Data includes prices, market caps, volumes, and other market metrics.
+    """
+    start_time = time.time()
+    
+    # Build query for CSV source only
+    query = select(Coin).where(Coin.source == "csv").order_by(desc(Coin.last_updated))
+    
+    # Get total count
+    count_query = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_query)
+    total_items = total_result.scalar_one()
+    
+    # Calculate pagination
+    total_pages = (total_items + per_page - 1) // per_page
+    offset = (page - 1) * per_page
+    
+    # Apply pagination
+    query = query.limit(per_page).offset(offset)
+    
+    # Execute query
+    result = await db.execute(query)
+    coins = result.scalars().all()
+    
+    # Calculate latency
+    latency_ms = (time.time() - start_time) * 1000
+    
+    return CoinDataResponse(
+        request_id=request.state.request_id,
+        api_latency_ms=round(latency_ms, 2),
+        data=[CoinResponse.model_validate(coin) for coin in coins],
+        pagination=PaginationMetadata(
+            page=page,
+            per_page=per_page,
+            total_items=total_items,
+            total_pages=total_pages
+        )
+    )
+
+
 @router.get("/health", response_model=HealthResponse)
 async def health_check(db: AsyncSession = Depends(get_db)):
     """
