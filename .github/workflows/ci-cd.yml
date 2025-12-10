@@ -226,7 +226,39 @@ jobs:
         id: get-endpoint
         run: |
           # Get ECS task public IP for smoke tests
-          echo "API_URL=${{ secrets.API_URL || 'http://18.61.86.53:8000' }}" >> $GITHUB_OUTPUT
+          echo "🔍 Fetching current API endpoint..."
+          
+          # Get the task ARN
+          TASK_ARN=$(aws ecs list-tasks \
+            --cluster kasparro-cluster \
+            --service-name kasparro-api-service \
+            --region ap-south-2 \
+            --query 'taskArns[0]' \
+            --output text)
+          
+          if [ -z "$TASK_ARN" ] || [ "$TASK_ARN" = "None" ]; then
+            echo "❌ No running tasks found"
+            exit 1
+          fi
+          
+          # Get the network interface ID
+          ENI_ID=$(aws ecs describe-tasks \
+            --cluster kasparro-cluster \
+            --tasks $TASK_ARN \
+            --region ap-south-2 \
+            --query 'tasks[0].attachments[0].details[?name==`networkInterfaceId`].value' \
+            --output text)
+          
+          # Get the public IP
+          PUBLIC_IP=$(aws ec2 describe-network-interfaces \
+            --network-interface-ids $ENI_ID \
+            --region ap-south-2 \
+            --query 'NetworkInterfaces[0].Association.PublicIp' \
+            --output text)
+          
+          API_ENDPOINT="http://${PUBLIC_IP}:8000"
+          echo "✅ API endpoint: $API_ENDPOINT"
+          echo "API_URL=$API_ENDPOINT" >> $GITHUB_OUTPUT
       
       - name: Run smoke tests
         env:
