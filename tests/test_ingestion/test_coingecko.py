@@ -26,13 +26,18 @@ async def test_coingecko_fetch_data_success(db_session, mock_coingecko_response)
     ingestion = CoinGeckoIngestion(db_session)
     
     with patch.object(ingestion, '_make_request', new_callable=AsyncMock) as mock_request:
+        # Mock returns same data for both pages (page 1 and page 2)
         mock_request.return_value = mock_coingecko_response
         
         records = await ingestion.fetch_data()
         
-        assert len(records) == 2
+        # Should fetch 2 pages, each with 2 records = 4 total
+        assert len(records) == 4
         assert records[0]['id'] == 'bitcoin'
         assert records[1]['id'] == 'ethereum'
+        # Second page duplicates (same mock data)
+        assert records[2]['id'] == 'bitcoin'
+        assert records[3]['id'] == 'ethereum'
 
 
 @pytest.mark.asyncio
