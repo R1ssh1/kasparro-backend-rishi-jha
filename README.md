@@ -84,14 +84,18 @@ A production-ready, cloud-deployed ETL pipeline that ingests cryptocurrency data
 
 ### Components
 
-- **3 Data Sources**: CoinGecko API (100 cryptos), RSS feed (30 articles), CSV (10 records)
+- **3 Data Sources**: 
+  - CoinGecko API (500 cryptocurrencies - 2 pages × 250)
+  - RSS feed (31 news articles)
+  - CSV file (10 cryptocurrency records)
 - **ETL Worker**: Scheduled service with hourly cron execution
-- **FastAPI Service**: REST API with pagination, filtering, and observability
+- **FastAPI Service**: REST API with 9 endpoints (6 public, 3 protected)
 - **PostgreSQL Database**: Async SQLAlchemy 2.0 with Alembic migrations
 - **Rate Limiting**: Token bucket algorithm with exponential backoff
 - **Schema Drift Detection**: Fuzzy matching with confidence scoring
 - **Failure Recovery**: Checkpoint-based resume with idempotent writes
 - **Observability**: Prometheus metrics + structured JSON logs
+- **Dashboard**: Interactive dark theme with Chart.js visualizations
 
 ---
 
@@ -235,6 +239,76 @@ curl "http://localhost:8000/data?source=rss_feed"
     "total_items": 140,
     "total_pages": 14
   }
+}
+```
+
+#### `GET /rss-feed`
+Retrieve cryptocurrency news articles from RSS feed source only (31 articles available).
+
+**Parameters:**
+- `page`: Page number (default: 1)
+- `per_page`: Items per page (default: 10, max: 100)
+
+```bash
+curl "http://localhost:8000/rss-feed?page=1&per_page=5"
+```
+
+**Response:**
+```json
+{
+  "request_id": "def-456",
+  "api_latency_ms": 13.08,
+  "total_items": 31,
+  "page": 1,
+  "per_page": 5,
+  "total_pages": 7,
+  "data": [
+    {
+      "id": "5e6f7g8h",
+      "source": "rss_feed",
+      "symbol": "N/A",
+      "name": "Crypto Market Update: Bitcoin Surges Past $95K",
+      "current_price": null,
+      "market_cap": null,
+      "price_change_24h": null,
+      "last_updated": "2025-12-10T08:30:00Z"
+    }
+  ]
+}
+```
+
+#### `GET /csv-data`
+Retrieve cryptocurrency data from CSV file source only (10 records available).
+
+**Parameters:**
+- `page`: Page number (default: 1)
+- `per_page`: Items per page (default: 10, max: 100)
+
+```bash
+curl "http://localhost:8000/csv-data?page=1&per_page=5"
+```
+
+**Response:**
+```json
+{
+  "request_id": "ghi-789",
+  "api_latency_ms": 6.53,
+  "total_items": 10,
+  "page": 1,
+  "per_page": 5,
+  "total_pages": 2,
+  "data": [
+    {
+      "id": "9i0j1k2l",
+      "source": "csv",
+      "symbol": "ETH",
+      "name": "Ethereum",
+      "current_price": 3456.78,
+      "market_cap": 415678901234,
+      "price_change_24h": 1.23,
+      "last_updated": "2025-12-09T12:00:00Z"
+    }
+  ]
 }
 ```
 
@@ -406,13 +480,38 @@ aws ecs update-service \
 ./get-api-ip.ps1
 ```
 
-### Production API
+### Finding the Deployment URL
 
-**Get Current IP**: IP changes with each deployment. Run:
+The API is deployed on AWS ECS Fargate with dynamic IP allocation. **The IP address changes with each deployment**, so use the provided PowerShell script to get the current URL:
 
-```bash
+```powershell
+# Navigate to terraform directory
 cd terraform
+
+# Run the script to get current public IP
 ./get-api-ip.ps1
+```
+
+**Example Output:**
+```
+Task ARN: arn:aws:ecs:ap-south-2:743957503839:task/kasparro-cluster/a8962a1c58494ab8b10f5c8a49afa941
+Public IP: 18.61.81.84
+
+API is available at: http://18.61.81.84:8000
+```
+
+**Current Production URL**: `http://18.61.81.84:8000` (as of latest deployment)
+
+**Quick Test:**
+```bash
+# Health check
+curl http://18.61.81.84:8000/health
+
+# View API documentation
+# Open in browser: http://18.61.81.84:8000/docs
+
+# Interactive dashboard
+# Open in browser: http://18.61.81.84:8000
 ```
 
 ### Monitoring
@@ -719,6 +818,62 @@ Rishi Jha
 **Contact:**
 - GitHub: [@R1ssh1](https://github.com/R1ssh1)
 - Repository: [kasparro-backend-rishi-jha](https://github.com/R1ssh1/kasparro-backend-rishi-jha)
+
+---
+
+## 📋 Project Completion Summary
+
+This project successfully implements a **production-ready cryptocurrency data aggregation platform** with comprehensive ETL pipelines, API services, and deployment automation.
+
+### ✅ All Requirements Completed
+
+**Priority 0 (Core Functionality):**
+- ✅ Multi-source data ingestion (CoinGecko, RSS, CSV)
+- ✅ PostgreSQL database with async SQLAlchemy
+- ✅ RESTful API with pagination and filtering
+- ✅ Automated scheduling with cron jobs
+- ✅ Docker containerization
+
+**Priority 1 (Reliability):**
+- ✅ Incremental ETL with checkpointing
+- ✅ Rate limiting with token bucket algorithm
+- ✅ Comprehensive error handling and logging
+- ✅ Database migrations with Alembic
+- ✅ Clean architecture with separation of concerns
+
+**Priority 2 (Advanced Features):**
+- ✅ Schema drift detection with fuzzy matching
+- ✅ Failure injection and recovery testing
+- ✅ Prometheus metrics and observability
+- ✅ Anomaly detection between ETL runs
+- ✅ AWS cloud deployment with Terraform
+- ✅ CI/CD pipeline with GitHub Actions
+- ✅ 61 automated tests with 83% coverage
+- ✅ Interactive dark-themed dashboard
+
+### 🎯 Key Achievements
+
+1. **Scalability**: Handles 500+ cryptocurrencies from CoinGecko API
+2. **Reliability**: Checkpoint-based recovery ensures no data loss
+3. **Observability**: Comprehensive metrics and structured logging
+4. **Production-Ready**: Deployed on AWS ECS with automated CI/CD
+5. **Quality**: 61 tests passing, 83% code coverage, all linting checks pass
+
+### 🌐 Accessing the Deployment
+
+**Current Production URL**: `http://18.61.81.84:8000`
+
+To get the latest deployment URL (IP changes with each deployment):
+```powershell
+cd terraform
+./get-api-ip.ps1
+```
+
+**Quick Links:**
+- Dashboard: http://18.61.81.84:8000
+- API Documentation: http://18.61.81.84:8000/docs
+- Health Check: http://18.61.81.84:8000/health
+- Prometheus Metrics: http://18.61.81.84:8000/metrics
 
 ---
 

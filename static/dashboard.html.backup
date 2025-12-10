@@ -14,9 +14,8 @@
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #0f172a;
-            color: #e2e8f0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -27,174 +26,87 @@
         }
 
         .header {
-            background: #1e293b;
-            border-radius: 12px;
+            background: white;
+            border-radius: 10px;
             padding: 30px;
             margin-bottom: 20px;
-            border: 1px solid #334155;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .header h1 {
-            color: #f8fafc;
-            font-size: 2em;
-            margin-bottom: 8px;
-            font-weight: 600;
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
         }
 
         .header p {
-            color: #94a3b8;
-            font-size: 1em;
-            margin-bottom: 16px;
-        }
-
-        .header-links {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-top: 16px;
-        }
-
-        .header-link {
-            background: #334155;
-            color: #e2e8f0;
-            padding: 8px 16px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 0.9em;
-            transition: all 0.2s;
-            border: 1px solid #475569;
-        }
-
-        .header-link:hover {
-            background: #475569;
-            border-color: #64748b;
+            color: #666;
+            font-size: 1.1em;
         }
 
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 16px;
+            gap: 20px;
             margin-bottom: 20px;
         }
 
         .stat-card {
-            background: #1e293b;
-            border-radius: 12px;
-            padding: 20px;
-            border: 1px solid #334155;
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
         }
 
         .stat-card h3 {
-            color: #94a3b8;
-            font-size: 0.85em;
+            color: #666;
+            font-size: 0.9em;
             text-transform: uppercase;
-            margin-bottom: 8px;
-            font-weight: 500;
-            letter-spacing: 0.5px;
+            margin-bottom: 10px;
         }
 
         .stat-card .value {
             font-size: 2em;
-            font-weight: 600;
-            color: #f8fafc;
+            font-weight: bold;
+            color: #667eea;
         }
 
         .stat-card .sub-value {
-            color: #64748b;
-            font-size: 0.85em;
-            margin-top: 4px;
+            color: #999;
+            font-size: 0.9em;
+            margin-top: 5px;
         }
 
         .chart-container {
-            background: #1e293b;
-            border-radius: 12px;
-            padding: 24px;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
             margin-bottom: 20px;
-            border: 1px solid #334155;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .chart-container h2 {
-            color: #f8fafc;
-            margin-bottom: 8px;
-            font-size: 1.3em;
-            font-weight: 600;
-        }
-
-        .chart-description {
-            color: #94a3b8;
-            font-size: 0.9em;
+            color: #333;
             margin-bottom: 20px;
-            line-height: 1.5;
-        }
-
-        .chart-wrapper {
-            position: relative;
-            height: 400px;
-        }
-
-        .chart-wrapper.small {
-            max-width: 500px;
-            height: 350px;
-            margin: 0 auto;
-        }
-
-        .legend-container {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #334155;
-        }
-
-        .legend-items {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
-            background: #334155;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 1px solid #475569;
-        }
-
-        .legend-item:hover {
-            background: #475569;
-        }
-
-        .legend-item.hidden {
-            opacity: 0.4;
-        }
-
-        .legend-color {
-            width: 16px;
-            height: 16px;
-            border-radius: 4px;
-        }
-
-        .legend-label {
-            font-size: 0.85em;
-            color: #e2e8f0;
         }
 
         .data-table {
-            background: #1e293b;
-            border-radius: 12px;
-            padding: 24px;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
             margin-bottom: 20px;
-            border: 1px solid #334155;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             overflow-x: auto;
         }
 
         .data-table h2 {
-            color: #f8fafc;
-            margin-bottom: 16px;
-            font-size: 1.3em;
-            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
         }
 
         table {
@@ -203,25 +115,20 @@
         }
 
         th {
-            background: #334155;
-            color: #f8fafc;
+            background: #667eea;
+            color: white;
             padding: 12px;
             text-align: left;
-            font-weight: 500;
-            font-size: 0.85em;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-weight: 600;
         }
 
         td {
             padding: 12px;
-            border-bottom: 1px solid #334155;
-            color: #e2e8f0;
-            font-size: 0.9em;
+            border-bottom: 1px solid #eee;
         }
 
         tr:hover {
-            background: #334155;
+            background: #f5f5f5;
         }
 
         .positive {
@@ -233,57 +140,46 @@
         }
 
         .refresh-btn {
-            background: #3b82f6;
+            background: #667eea;
             color: white;
             border: none;
             padding: 10px 20px;
-            border-radius: 8px;
+            border-radius: 5px;
             cursor: pointer;
-            font-size: 0.95em;
-            font-weight: 500;
-            transition: all 0.2s;
+            font-size: 1em;
+            margin-bottom: 10px;
         }
 
         .refresh-btn:hover {
-            background: #2563eb;
+            background: #5568d3;
         }
 
         .loading {
             text-align: center;
             padding: 40px;
-            color: #64748b;
+            color: #666;
         }
 
         .tab-container {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             margin-bottom: 20px;
-            background: #1e293b;
-            padding: 8px;
-            border-radius: 12px;
-            border: 1px solid #334155;
         }
 
         .tab-btn {
-            background: transparent;
-            border: none;
-            color: #94a3b8;
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
             padding: 10px 20px;
-            border-radius: 8px;
+            border-radius: 5px;
             cursor: pointer;
-            font-size: 0.95em;
-            font-weight: 500;
-            transition: all 0.2s;
+            font-size: 1em;
+            transition: all 0.3s;
         }
 
         .tab-btn.active {
-            background: #3b82f6;
-            color: #ffffff;
-        }
-
-        .tab-btn:hover:not(.active) {
-            background: #334155;
-            color: #e2e8f0;
+            background: #667eea;
+            color: white;
         }
 
         .tab-content {
@@ -299,16 +195,9 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Kasparro Crypto Dashboard</h1>
-            <p>Real-time cryptocurrency data aggregation from multiple sources</p>
-            <button class="refresh-btn" onclick="loadAllData()">Refresh Data</button>
-
-            <div class="header-links">
-                <a href="/health" class="header-link" target="_blank">Health Check</a>
-                <a href="/docs" class="header-link" target="_blank">API Documentation</a>
-                <a href="/metrics" class="header-link" target="_blank">Prometheus Metrics</a>
-                <a href="/data?limit=10" class="header-link" target="_blank">Data API</a>
-            </div>
+            <h1>🚀 Kasparro Crypto Dashboard</h1>
+            <p>Real-time cryptocurrency data from multiple sources</p>
+            <button class="refresh-btn" onclick="loadAllData()">🔄 Refresh Data</button>
         </div>
 
         <div class="stats-grid" id="statsGrid">
@@ -329,34 +218,25 @@
             </div>
             <div class="stat-card">
                 <h3>Last Updated</h3>
-                <div class="value" id="lastUpdate" style="font-size: 1.1em;">-</div>
+                <div class="value" id="lastUpdate" style="font-size: 1.2em;">-</div>
             </div>
         </div>
 
         <div class="tab-container">
-            <button class="tab-btn active" onclick="switchTab('crypto', this)">Cryptocurrencies</button>
-            <button class="tab-btn" onclick="switchTab('news', this)">News Feed</button>
-            <button class="tab-btn" onclick="switchTab('portfolios', this)">CSV Data</button>
+            <button class="tab-btn active" onclick="switchTab('crypto')">💰 Cryptocurrencies</button>
+            <button class="tab-btn" onclick="switchTab('news')">📰 News Feed</button>
+            <button class="tab-btn" onclick="switchTab('portfolios')">📊 Portfolios</button>
         </div>
 
         <!-- Crypto Tab -->
         <div id="crypto-tab" class="tab-content active">
             <div class="chart-container">
                 <h2>Top 10 Cryptocurrencies by Market Cap</h2>
-                <p class="chart-description">Live market capitalization data from CoinGecko API. Click on legend items
-                    to show/hide specific cryptocurrencies from the chart.</p>
-                <div class="chart-wrapper">
-                    <canvas id="marketCapChart"></canvas>
-                </div>
-                <div class="legend-container">
-                    <div class="legend-items" id="cryptoLegend"></div>
-                </div>
+                <canvas id="marketCapChart"></canvas>
             </div>
 
             <div class="data-table">
                 <h2>Cryptocurrency Market Data</h2>
-                <p class="chart-description">Comprehensive market data including prices, market caps, volumes, and
-                    24-hour price changes for top cryptocurrencies.</p>
                 <div id="cryptoTable" class="loading">Loading cryptocurrency data...</div>
             </div>
         </div>
@@ -365,8 +245,6 @@
         <div id="news-tab" class="tab-content">
             <div class="data-table">
                 <h2>Latest Cryptocurrency News</h2>
-                <p class="chart-description">Real-time cryptocurrency news aggregated from RSS feeds. Stay updated with
-                    the latest market trends and developments.</p>
                 <div id="newsTable" class="loading">Loading news feed...</div>
             </div>
         </div>
@@ -375,17 +253,11 @@
         <div id="portfolios-tab" class="tab-content">
             <div class="chart-container">
                 <h2>CSV Data Distribution</h2>
-                <p class="chart-description">Historical cryptocurrency data loaded from CSV files. This chart shows the
-                    market cap distribution across different assets.</p>
-                <div class="chart-wrapper small">
-                    <canvas id="portfolioChart"></canvas>
-                </div>
+                <canvas id="portfolioChart"></canvas>
             </div>
 
             <div class="data-table">
                 <h2>CSV Cryptocurrency Data</h2>
-                <p class="chart-description">Static cryptocurrency data imported from CSV source files for historical
-                    analysis and comparison.</p>
                 <div id="portfoliosTable" class="loading">Loading CSV data...</div>
             </div>
         </div>
@@ -395,73 +267,23 @@
         const API_BASE = window.location.origin;
         let marketCapChart = null;
         let portfolioChart = null;
-        let cryptoDataCache = [];
-        let visibleDatasets = new Set();
 
-        const chartColors = [
-            '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b',
-            '#10b981', '#06b6d4', '#6366f1', '#a855f7',
-            '#14b8a6', '#f97316'
-        ];
-
-        function switchTab(tab, button) {
+        function switchTab(tab) {
+            // Update tab buttons
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
+            event.target.classList.add('active');
 
+            // Update tab content
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             document.getElementById(`${tab}-tab`).classList.add('active');
-        }
-
-        function toggleDataset(index) {
-            if (visibleDatasets.has(index)) {
-                visibleDatasets.delete(index);
-            } else {
-                visibleDatasets.add(index);
-            }
-            updateCryptoChart();
-        }
-
-        function updateCryptoChart() {
-            if (!cryptoDataCache.length || !marketCapChart) return;
-
-            const sortedData = [...cryptoDataCache].sort((a, b) =>
-                parseFloat(b.market_cap) - parseFloat(a.market_cap)
-            );
-            const top10 = sortedData.slice(0, 10);
-
-            // Filter to only show visible datasets
-            const visibleCryptos = top10.filter((_, idx) => visibleDatasets.has(idx));
-            const visibleLabels = visibleCryptos.map(c => c.symbol);
-            const visibleData = visibleCryptos.map(c => parseFloat(c.market_cap) / 1e9);
-            const visibleColors = top10.map((_, idx) => chartColors[idx]).filter((_, idx) => visibleDatasets.has(idx));
-
-            marketCapChart.data.labels = visibleLabels;
-            marketCapChart.data.datasets[0].data = visibleData;
-            marketCapChart.data.datasets[0].backgroundColor = visibleColors;
-            marketCapChart.update();
-
-            // Update legend items
-            document.querySelectorAll('.legend-item').forEach((item, idx) => {
-                if (visibleDatasets.has(idx)) {
-                    item.classList.remove('hidden');
-                } else {
-                    item.classList.add('hidden');
-                }
-            });
         }
 
         async function loadCryptoData() {
             try {
                 const response = await fetch(`${API_BASE}/data?source=coingecko&per_page=50`);
                 const data = await response.json();
-                cryptoDataCache = data.data;
 
                 document.getElementById('totalCoins').textContent = data.pagination.total_items;
-
-                // Sort by market cap
-                const sortedData = [...data.data].sort((a, b) =>
-                    parseFloat(b.market_cap) - parseFloat(a.market_cap)
-                );
 
                 // Update table
                 const tableHtml = `
@@ -474,11 +296,11 @@
                                 <th>Price (USD)</th>
                                 <th>Market Cap</th>
                                 <th>24h Volume</th>
-                                <th>24h Change</th>
+                                <th>24h Change %</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${sortedData.slice(0, 20).map((coin, idx) => `
+                            ${data.data.slice(0, 20).map((coin, idx) => `
                                 <tr>
                                     <td>${idx + 1}</td>
                                     <td><strong>${coin.symbol}</strong></td>
@@ -487,7 +309,7 @@
                                     <td>$${parseFloat(coin.market_cap).toLocaleString('en-US', { maximumFractionDigits: 0 })}</td>
                                     <td>$${parseFloat(coin.volume_24h).toLocaleString('en-US', { maximumFractionDigits: 0 })}</td>
                                     <td class="${parseFloat(coin.price_change_24h) >= 0 ? 'positive' : 'negative'}">
-                                        ${parseFloat(coin.price_change_24h) >= 0 ? '+' : ''}${parseFloat(coin.price_change_24h).toFixed(2)}%
+                                        ${parseFloat(coin.price_change_24h).toFixed(2)}%
                                     </td>
                                 </tr>
                             `).join('')}
@@ -498,18 +320,17 @@
                 document.getElementById('cryptoTable').innerHTML = tableHtml;
 
                 // Update chart
-                const top10 = sortedData.slice(0, 10);
-
-                // Initialize visible datasets (all visible by default)
-                visibleDatasets.clear();
-                top10.forEach((_, idx) => visibleDatasets.add(idx));
-
+                const top10 = data.data.slice(0, 10);
                 const chartData = {
                     labels: top10.map(c => c.symbol),
                     datasets: [{
-                        label: 'Market Cap (Billions USD)',
+                        label: 'Market Cap (USD)',
                         data: top10.map(c => parseFloat(c.market_cap) / 1e9),
-                        backgroundColor: chartColors
+                        backgroundColor: [
+                            '#667eea', '#764ba2', '#f093fb', '#4facfe',
+                            '#43e97b', '#fa709a', '#fee140', '#30cfd0',
+                            '#a8edea', '#fed6e3'
+                        ]
                     }]
                 };
 
@@ -520,44 +341,24 @@
                     data: chartData,
                     options: {
                         responsive: true,
-                        maintainAspectRatio: false,
+                        maintainAspectRatio: true,
                         plugins: {
                             legend: { display: false },
                             title: {
-                                display: false
+                                display: true,
+                                text: 'Market Cap in Billions (USD)'
                             }
                         },
                         scales: {
                             y: {
                                 beginAtZero: true,
                                 ticks: {
-                                    callback: value => '$' + value.toFixed(1) + 'B',
-                                    color: '#94a3b8'
-                                },
-                                grid: {
-                                    color: '#334155'
-                                }
-                            },
-                            x: {
-                                ticks: {
-                                    color: '#94a3b8'
-                                },
-                                grid: {
-                                    color: '#334155'
+                                    callback: value => '$' + value.toFixed(1) + 'B'
                                 }
                             }
                         }
                     }
                 });
-
-                // Create legend
-                const legendHtml = top10.map((coin, idx) => `
-                    <div class="legend-item" onclick="toggleDataset(${idx})">
-                        <div class="legend-color" style="background: ${chartColors[idx]}"></div>
-                        <div class="legend-label">${coin.symbol} - ${coin.name}</div>
-                    </div>
-                `).join('');
-                document.getElementById('cryptoLegend').innerHTML = legendHtml;
 
                 if (data.data.length > 0) {
                     document.getElementById('lastUpdate').textContent =
@@ -566,7 +367,7 @@
             } catch (error) {
                 console.error('Error loading crypto data:', error);
                 document.getElementById('cryptoTable').innerHTML =
-                    '<p style="color: #ef4444;">Error loading cryptocurrency data</p>';
+                    '<p style="color: red;">Error loading cryptocurrency data</p>';
             }
         }
 
@@ -583,7 +384,7 @@
                             <tr>
                                 <th width="60%">Headline</th>
                                 <th>Published</th>
-                                <th>Source ID</th>
+                                <th>External ID</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -591,7 +392,7 @@
                                 <tr>
                                     <td><strong>${article.name || 'No title'}</strong></td>
                                     <td>${new Date(article.last_updated).toLocaleString()}</td>
-                                    <td style="font-size: 0.8em; color: #64748b;">${article.external_id.substring(0, 20)}...</td>
+                                    <td style="font-size: 0.8em; color: #999;">${article.external_id.substring(0, 20)}...</td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -602,7 +403,7 @@
             } catch (error) {
                 console.error('Error loading news data:', error);
                 document.getElementById('newsTable').innerHTML =
-                    '<p style="color: #ef4444;">Error loading news feed</p>';
+                    '<p style="color: red;">Error loading news feed</p>';
             }
         }
 
@@ -643,16 +444,13 @@
 
                     document.getElementById('portfoliosTable').innerHTML = tableHtml;
 
-                    // CSV data pie chart with different colors
-                    const pieColors = chartColors.slice(0, data.data.length);
+                    // CSV data chart - market cap comparison
                     const chartData = {
-                        labels: data.data.map(c => `${c.symbol} - ${c.name}`),
+                        labels: data.data.map(c => c.symbol),
                         datasets: [{
                             label: 'Market Cap (USD)',
                             data: data.data.map(c => parseFloat(c.market_cap || 0)),
-                            backgroundColor: pieColors,
-                            borderColor: '#1e293b',
-                            borderWidth: 2
+                            backgroundColor: '#667eea'
                         }]
                     };
 
@@ -663,29 +461,20 @@
                         data: chartData,
                         options: {
                             responsive: true,
-                            maintainAspectRatio: false,
+                            maintainAspectRatio: true,
                             plugins: {
-                                legend: {
-                                    position: 'right',
-                                    labels: {
-                                        color: '#e2e8f0',
-                                        padding: 12,
-                                        font: {
-                                            size: 11
-                                        }
-                                    }
-                                }
+                                legend: { position: 'right' }
                             }
                         }
                     });
                 } else {
                     document.getElementById('portfoliosTable').innerHTML =
-                        '<p style="color: #64748b;">No CSV data available. CSV ingestion may not have run yet.</p>';
+                        '<p>No portfolio data available. CSV ingestion may not have run yet.</p>';
                 }
             } catch (error) {
                 console.error('Error loading portfolio data:', error);
                 document.getElementById('portfoliosTable').innerHTML =
-                    '<p style="color: #64748b;">CSV data not yet loaded from source</p>';
+                    '<p style="color: #999;">Portfolio data not yet loaded from CSV source</p>';
             }
         }
 
