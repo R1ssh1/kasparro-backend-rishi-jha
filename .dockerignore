@@ -1,0 +1,54 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Terraform
+terraform/
+*.tfstate
+*.tfstate.*
+.terraform/
+*.tfvars
+
+# Documentation
+*.md
+docs/
+
+# Tests
+tests/
+pytest.ini
+.pytest_cache/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv
+*.egg-info/
+.eggs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Data files (usually not needed in container)
+data/*.csv
+
+# Logs
+*.log

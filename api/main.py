@@ -4,6 +4,8 @@ import time
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 import structlog
 
 from core.config import settings
@@ -73,12 +75,28 @@ async def add_request_id_and_timing(request: Request, call_next):
 # Include routers
 app.include_router(crypto.router)
 
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 @app.get("/")
 async def root():
-    """Root endpoint."""
+    """Root endpoint - serve dashboard."""
+    return FileResponse("static/dashboard.html")
+
+
+@app.get("/api")
+async def api_info():
+    """API information endpoint."""
     return {
         "service": "Kasparro Crypto Data API",
         "version": "1.0.0",
-        "status": "operational"
+        "status": "operational",
+        "endpoints": {
+            "dashboard": "/",
+            "api_docs": "/docs",
+            "data": "/data",
+            "health": "/health",
+            "stats": "/stats"
+        }
     }

@@ -1,7 +1,7 @@
 """Database connection and session management."""
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from core.config import settings
 
 # Async engine for FastAPI
@@ -44,7 +44,7 @@ async def check_db_connection() -> bool:
     """Check if database is reachable."""
     try:
         async with AsyncSessionLocal() as session:
-            await session.execute("SELECT 1")
+            await session.execute(text("SELECT 1"))
             return True
     except Exception:
         return False

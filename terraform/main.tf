@@ -322,6 +322,22 @@ resource "aws_ecs_task_definition" "api" {
         value = "postgresql://${var.db_username}:${var.db_password}@${aws_db_instance.postgres.endpoint}/${var.db_name}"
       },
       {
+        name  = "DATABASE_HOST"
+        value = split(":", aws_db_instance.postgres.endpoint)[0]
+      },
+      {
+        name  = "DATABASE_USER"
+        value = var.db_username
+      },
+      {
+        name  = "DATABASE_PASSWORD"
+        value = var.db_password
+      },
+      {
+        name  = "DATABASE_NAME"
+        value = var.db_name
+      },
+      {
         name  = "COINGECKO_RATE_LIMIT"
         value = "30"
       }
@@ -418,6 +434,22 @@ resource "aws_ecs_task_definition" "worker" {
       {
         name  = "DATABASE_URL_SYNC"
         value = "postgresql://${var.db_username}:${var.db_password}@${aws_db_instance.postgres.endpoint}/${var.db_name}"
+      },
+      {
+        name  = "DATABASE_HOST"
+        value = split(":", aws_db_instance.postgres.endpoint)[0]
+      },
+      {
+        name  = "DATABASE_USER"
+        value = var.db_username
+      },
+      {
+        name  = "DATABASE_PASSWORD"
+        value = var.db_password
+      },
+      {
+        name  = "DATABASE_NAME"
+        value = var.db_name
       },
       {
         name  = "ETL_SCHEDULE_MINUTES"

@@ -166,8 +166,8 @@ jobs:
     name: Deploy to AWS ECS
     runs-on: ubuntu-latest
     needs: build
-    # Disabled until Terraform infrastructure is provisioned
-    if: false # github.ref == 'refs/heads/main' && github.event_name == 'push'
+    # Enabled for automatic deployment to AWS ECS
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     
     steps:
       - name: Checkout code
@@ -187,7 +187,7 @@ jobs:
             --cluster kasparro-cluster \
             --service kasparro-api-service \
             --force-new-deployment \
-            --region ${{ secrets.AWS_REGION || 'us-east-1' }}
+            --region ${{ secrets.AWS_REGION || 'ap-south-2' }}
           
           echo "✅ API deployment initiated"
       
@@ -197,7 +197,7 @@ jobs:
           aws ecs wait services-stable \
             --cluster kasparro-cluster \
             --services kasparro-api-service \
-            --region ${{ secrets.AWS_REGION || 'us-east-1' }} || echo "⚠️ Timeout (may still be deploying)"
+            --region ${{ secrets.AWS_REGION || 'ap-south-2' }} || echo "⚠️ Timeout (may still be deploying)"
       
       - name: Deployment summary
         run: |
@@ -225,9 +225,8 @@ jobs:
       - name: Get API endpoint
         id: get-endpoint
         run: |
-          # For Terraform-managed infrastructure, get ALB DNS
-          # Alternative: Hard-code or use GitHub secret
-          echo "API_URL=http://kasparro-alb.us-east-1.elb.amazonaws.com" >> $GITHUB_OUTPUT
+          # Get ECS task public IP for smoke tests
+          echo "API_URL=${{ secrets.API_URL || 'http://18.61.86.53:8000' }}" >> $GITHUB_OUTPUT
       
       - name: Run smoke tests
         env:
