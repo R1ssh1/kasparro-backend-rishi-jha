@@ -56,7 +56,7 @@ fi
 
 # Test 3: Database Connectivity
 log_test "3/10" "Database Connectivity"
-if echo "$HEALTH_RESPONSE" | grep -q '"database":"connected"'; then
+if echo "$HEALTH_RESPONSE" | grep -q '"database_connected":true'; then
     log_pass "Database is connected"
 else
     log_fail "Database connection issue"
