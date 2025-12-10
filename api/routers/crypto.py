@@ -29,18 +29,22 @@ router = APIRouter(tags=["crypto"])
 @router.get("/data", response_model=CoinDataResponse)
 async def get_crypto_data(
     request: Request,
-    page: int = Query(1, ge=1, description="Page number"),
-    per_page: int = Query(50, ge=1, le=100, description="Items per page"),
-    symbol: Optional[str] = Query(None, description="Filter by symbol"),
-    min_price: Optional[float] = Query(None, description="Minimum price filter"),
-    max_price: Optional[float] = Query(None, description="Maximum price filter"),
-    source: Optional[str] = Query(None, description="Filter by data source"),
+    page: int = Query(1, ge=1, description="Page number (must be >= 1)"),
+    per_page: int = Query(50, ge=1, le=100, description="Items per page (1-100)"),
+    symbol: Optional[str] = Query(None, description="Filter by symbol (e.g., BTC, ETH)"),
+    min_price: Optional[float] = Query(None, description="Minimum price filter (numeric value)"),
+    max_price: Optional[float] = Query(None, description="Maximum price filter (numeric value)"),
+    source: Optional[str] = Query(None, description="Filter by data source (coingecko, csv, rss_feed)"),
     db: AsyncSession = Depends(get_db)
 ):
     """
     Get cryptocurrency data with pagination and filtering.
     
     Returns data with request metadata including request_id and api_latency_ms.
+    
+    **Note:** The 422 Validation Error shown in the responses section is an example 
+    of what would be returned if invalid parameters are provided (e.g., page=0, per_page=200).
+    This endpoint will return 200 OK with valid parameters.
     """
     start_time = time.time()
     
