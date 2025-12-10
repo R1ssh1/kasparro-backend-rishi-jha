@@ -424,11 +424,15 @@
             );
             const top10 = sortedData.slice(0, 10);
 
-            const filteredData = top10.map((coin, idx) => 
-                visibleDatasets.has(idx) ? parseFloat(coin.market_cap) / 1e9 : 0
-            );
+            // Filter to only show visible datasets
+            const visibleCryptos = top10.filter((_, idx) => visibleDatasets.has(idx));
+            const visibleLabels = visibleCryptos.map(c => c.symbol);
+            const visibleData = visibleCryptos.map(c => parseFloat(c.market_cap) / 1e9);
+            const visibleColors = top10.map((_, idx) => chartColors[idx]).filter((_, idx) => visibleDatasets.has(idx));
 
-            marketCapChart.data.datasets[0].data = filteredData;
+            marketCapChart.data.labels = visibleLabels;
+            marketCapChart.data.datasets[0].data = visibleData;
+            marketCapChart.data.datasets[0].backgroundColor = visibleColors;
             marketCapChart.update();
 
             // Update legend items

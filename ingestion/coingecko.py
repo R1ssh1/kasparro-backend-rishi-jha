@@ -90,28 +90,37 @@ class CoinGeckoIngestion(BaseIngestion):
         Returns:
             List of coin records
         """
-        params = {
-            "vs_currency": "usd",
-            "order": "market_cap_desc",
-            "per_page": 100,  # Max 250, using 100 for safety
-            "page": 1,
-            "sparkline": False,
-            "price_change_percentage": "24h"
-        }
+        all_coins = []
         
-        try:
-            data = await self._make_request("/coins/markets", params)
+        # Fetch first 2 pages to get top 500 cryptocurrencies by market cap
+        for page in range(1, 3):
+            params = {
+                "vs_currency": "usd",
+                "order": "market_cap_desc",
+                "per_page": 250,  # Maximum allowed by API
+                "page": page,
+                "sparkline": False,
+                "price_change_percentage": "24h"
+            }
             
-            if isinstance(data, list):
-                self.logger.info(f"Fetched {len(data)} coins from CoinGecko")
-                return data
-            else:
-                self.logger.error(f"Unexpected response format: {type(data)}")
-                return []
+            try:
+                data = await self._make_request("/coins/markets", params)
                 
-        except Exception as e:
-            self.logger.error(f"Failed to fetch CoinGecko data: {str(e)}")
-            raise
+                if isinstance(data, list):
+                    all_coins.extend(data)
+                    self.logger.info(f"Fetched {len(data)} coins from CoinGecko page {page}")
+                else:
+                    self.logger.error(f"Unexpected response format on page {page}: {type(data)}")
+                    break
+                    
+            except Exception as e:
+                self.logger.error(f"Failed to fetch CoinGecko data page {page}: {str(e)}")
+                if page == 1:
+                    raise  # Fail if first page fails
+                break  # Continue with partial data if subsequent pages fail
+        
+        self.logger.info(f"Total fetched {len(all_coins)} coins from CoinGecko")
+        return all_coins
     
     def normalize_record(self, raw_data: Dict[str, Any]) -> Optional[NormalizedCoin]:
         """
