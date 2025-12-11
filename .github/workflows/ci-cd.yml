@@ -88,19 +88,16 @@ jobs:
       
       - name: Run Black (formatting check)
         run: |
-          black --check .
-        continue-on-error: true
+          black --check . || echo "⚠️ Formatting issues found - run 'black .' to fix"
       
       - name: Run isort (import sorting)
         run: |
-          isort --check-only .
-        continue-on-error: true
+          isort --check-only . || echo "⚠️ Import sorting issues - run 'isort .' to fix"
       
       - name: Run flake8 (linting)
         run: |
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || echo "⚠️ Critical errors found"
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-        continue-on-error: true
   
   build:
     name: Build Docker Image
@@ -111,6 +108,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      security-events: write
     
     steps:
       - name: Checkout code
@@ -151,13 +149,14 @@ jobs:
       - name: Run Trivy security scan
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-${{ github.sha }}
           format: 'sarif'
           output: 'trivy-results.sarif'
         continue-on-error: true
       
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
         with:
           sarif_file: 'trivy-results.sarif'
         continue-on-error: true

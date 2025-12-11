@@ -5,10 +5,12 @@ linking cryptocurrency records across different data sources.
 """
 from datetime import datetime, timezone
 from typing import Optional
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_
-from core.models import Coin, MasterEntity, EntityMapping
+
 import structlog
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from core.models import Coin, MasterEntity, EntityMapping
 
 logger = structlog.get_logger(__name__)
 

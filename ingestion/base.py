@@ -1,21 +1,27 @@
 """Base class for all ingestion sources."""
 import uuid
-import structlog
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
-from typing import List, Optional, Dict, Any, Set
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, insert
-from sqlalchemy.dialects.postgresql import insert as pg_insert
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from typing import Any, Dict, List, Optional, Set
 
-from core.models import RawCoinData, Coin, ETLCheckpoint, ETLRun
+import structlog
+from sqlalchemy import insert, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.ext.asyncio import AsyncSession
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
+
 from core.config import settings
-from schemas.ingestion import NormalizedCoin
-from ingestion.rate_limiter import rate_limiter_registry
-from core.schema_drift import SchemaDriftDetector
-from core.failure_injector import failure_injector, FailureType
+from core.failure_injector import FailureType, failure_injector
 from core.master_entity import process_coin_for_master_entity
+from core.models import Coin, ETLCheckpoint, ETLRun, RawCoinData
+from core.schema_drift import SchemaDriftDetector
+from ingestion.rate_limiter import rate_limiter_registry
+from schemas.ingestion import NormalizedCoin
 
 logger = structlog.get_logger()
 
