@@ -126,3 +126,69 @@ class SchemaDriftLog(Base):
     __table_args__ = (
         Index('ix_schema_drift_source_detected', 'source', 'detected_at'),
     )
+
+
+class MasterEntity(Base):
+    """Master entity table to link cryptocurrency records across different sources.
+    
+    This provides a canonical view of cryptocurrencies by linking records from
+    different data sources (CoinGecko, CSV, RSS) that represent the same asset.
+    """
+    
+    __tablename__ = "master_entities"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    canonical_symbol = Column(String(20), nullable=False, unique=True, index=True)
+    canonical_name = Column(String(200), nullable=False)
+    entity_type = Column(String(50), default="cryptocurrency")  # Future: tokens, stablecoins, etc.
+    
+    # Primary source - the "golden source" for this entity
+    primary_source = Column(String(50), nullable=False)
+    primary_coin_id = Column(Integer, nullable=True)  # FK to Coin table
+    
+    # Metadata
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc)
+    )
+    
+    __table_args__ = (
+        Index('ix_master_entities_symbol_name', 'canonical_symbol', 'canonical_name'),
+    )
+
+
+class EntityMapping(Base):
+    """Maps individual coin records to their master entity.
+    
+    This table creates the many-to-one relationship between source-specific
+    coin records and their canonical master entity.
+    """
+    
+    __tablename__ = "entity_mappings"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    master_entity_id = Column(Integer, nullable=False, index=True)
+    coin_id = Column(Integer, nullable=False, index=True)
+    source = Column(String(50), nullable=False, index=True)
+    confidence = Column(Numeric(5, 3), default=1.0)  # Matching confidence (0.0-1.0)
+    is_primary = Column(Integer, default=0)  # 1 if this is the primary source record
+    
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc)
+    )
+    
+    __table_args__ = (
+        UniqueConstraint('coin_id', name='uq_coin_id'),  # Each coin can map to only one master entity
+        Index('ix_entity_mappings_master_entity', 'master_entity_id'),
+        Index('ix_entity_mappings_source', 'source', 'master_entity_id'),
+    )
+

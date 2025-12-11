@@ -15,6 +15,7 @@ from schemas.ingestion import NormalizedCoin
 from ingestion.rate_limiter import rate_limiter_registry
 from core.schema_drift import SchemaDriftDetector
 from core.failure_injector import failure_injector, FailureType
+from core.master_entity import process_coin_for_master_entity
 
 logger = structlog.get_logger()
 
@@ -121,7 +122,7 @@ class BaseIngestion(ABC):
     
     async def upsert_normalized_data(self, normalized_records: List[NormalizedCoin]) -> int:
         """
-        Upsert normalized data with conflict resolution.
+        Upsert normalized data with conflict resolution and master entity processing.
         
         Returns:
             Number of records processed
@@ -144,10 +145,33 @@ class BaseIngestion(ABC):
                 'last_updated': stmt.excluded.last_updated,
                 'updated_at': datetime.now(timezone.utc),
             }
-        )
+        ).returning(Coin.id, Coin.source, Coin.external_id, Coin.symbol, Coin.name)
         
-        await self.session.execute(stmt)
+        result = await self.session.execute(stmt)
+        upserted_coins = result.fetchall()
+        
         self.logger.info(f"Upserted {len(normalized_records)} normalized records")
+        
+        # Process master entities for upserted coins
+        master_entity_count = 0
+        for row in upserted_coins:
+            # Fetch the complete coin object
+            coin_result = await self.session.execute(
+                select(Coin).where(Coin.id == row.id)
+            )
+            coin = coin_result.scalar_one_or_none()
+            
+            if coin:
+                success = await process_coin_for_master_entity(self.session, coin)
+                if success:
+                    master_entity_count += 1
+        
+        if master_entity_count > 0:
+            self.logger.info(
+                "processed_master_entities",
+                processed=master_entity_count,
+                total=len(upserted_coins)
+            )
         
         return len(normalized_records)
     
