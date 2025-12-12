@@ -48,6 +48,25 @@ A production-ready, cloud-deployed ETL pipeline that ingests cryptocurrency data
 - **Cloud Deployment** ✅ AWS ECS Fargate in ap-south-2 region
 - **Scheduled ETL** ✅ EventBridge cron (hourly)
 - **Automated Tests** ✅ 61 tests covering all scenarios
+
+### ✅ Post-Evaluation Improvements (COMPLETE)
+
+Based on evaluator feedback, two key improvements were implemented:
+
+**1. Local Development Security** ✅
+- **Issue**: `docker-compose.yml` hardcoded PostgreSQL credentials
+- **Fix**: All credentials now sourced from `.env` file
+- **Impact**: Prevents accidental exposure of development patterns in production
+- **Files**: `docker-compose.yml`, `.env`, `.env.example`
+
+**2. Master Entity Normalization** ✅
+- **Issue**: Duplicate cryptocurrency records across sources (Bitcoin from CoinGecko ≠ Bitcoin from CSV)
+- **Fix**: Created `master_entities` and `entity_mappings` tables for canonical asset views
+- **Impact**: Enables unified cross-source data analysis and quality monitoring
+- **Stats**: 477 master entities, 535 mappings linking coins across sources
+- **Files**: `core/models.py`, `core/master_entity.py`, `migrations/versions/ae47cc2dd3ef_*.py`
+
+📖 **Detailed Documentation**: See [IMPROVEMENTS.md](IMPROVEMENTS.md) and [TESTING_SUMMARY.md](TESTING_SUMMARY.md)
 - **Smoke Test** ✅ End-to-end validation via CI/CD
 
 ---
@@ -91,11 +110,14 @@ A production-ready, cloud-deployed ETL pipeline that ingests cryptocurrency data
 - **ETL Worker**: Scheduled service with hourly cron execution
 - **FastAPI Service**: REST API with 9 endpoints (6 public, 3 protected)
 - **PostgreSQL Database**: Async SQLAlchemy 2.0 with Alembic migrations
+  - **Master Entity Normalization**: Links cryptocurrency records across sources
+  - Tables: `coins`, `master_entities`, `entity_mappings`, `etl_runs`, `etl_checkpoints`, `schema_drift_logs`
 - **Rate Limiting**: Token bucket algorithm with exponential backoff
 - **Schema Drift Detection**: Fuzzy matching with confidence scoring
 - **Failure Recovery**: Checkpoint-based resume with idempotent writes
 - **Observability**: Prometheus metrics + structured JSON logs
 - **Dashboard**: Interactive dark theme with Chart.js visualizations
+- **Security**: Environment-based secrets (no hardcoded credentials)
 
 ---
 
@@ -114,10 +136,17 @@ A production-ready, cloud-deployed ETL pipeline that ingests cryptocurrency data
 cp .env.example .env
 
 # Edit .env with your credentials:
+# Database Configuration (used by docker-compose)
+# DATABASE_USER=kasparro
+# DATABASE_PASSWORD=your_secure_password
+# DATABASE_NAME=kasparro
+#
+# API Keys
 # COINGECKO_API_KEY=your_coingecko_key
 # ADMIN_API_KEY=your_admin_key
-# DATABASE_URL=postgresql+asyncpg://kasparro:kasparro@db:5432/kasparro
 ```
+
+**Security Note**: All credentials are now sourced from `.env` file - no hardcoded secrets in `docker-compose.yml`
 
 ### 2. Start Services
 
@@ -409,6 +438,7 @@ kasparro-backend/
 │   ├── config.py            # Settings management
 │   ├── database.py          # DB connection & session
 │   ├── models.py            # SQLAlchemy ORM models
+│   ├── master_entity.py     # Master entity normalization
 │   ├── schema_drift.py      # Drift detection logic
 │   ├── failure_injector.py  # Failure testing framework
 │   └── prometheus.py        # Metrics collection
@@ -799,6 +829,41 @@ FAILURE_PROBABILITY=0.0
 
 ---
 
+## 🔗 Data Normalization & Master Entities
+
+### Cross-Source Cryptocurrency Linking
+
+The system automatically creates **master entities** to provide a canonical view of cryptocurrencies across data sources:
+
+**Example**: Bitcoin appears in multiple sources:
+- `coins` table: 3 separate records (CoinGecko, CSV, RSS)
+- `master_entities` table: 1 canonical "Bitcoin" entity
+- `entity_mappings` table: 3 mappings linking all Bitcoin records
+
+**Query Example - Get all Bitcoin data across sources:**
+```sql
+SELECT 
+    me.canonical_symbol,
+    c.source,
+    c.current_price,
+    c.last_updated
+FROM master_entities me
+JOIN entity_mappings em ON me.id = em.master_entity_id
+JOIN coins c ON em.coin_id = c.id
+WHERE me.canonical_symbol = 'BTC'
+ORDER BY c.last_updated DESC;
+```
+
+**Benefits:**
+- ✅ Unified cryptocurrency view across all sources
+- ✅ Cross-source price comparison and anomaly detection
+- ✅ Automatic during ETL (no manual mapping required)
+- ✅ Currently tracking: 477 master entities with 535 mappings
+
+📖 **Full Documentation**: See [IMPROVEMENTS.md](IMPROVEMENTS.md#2-master-entity-normalization-data-quality)
+
+---
+
 ## 🎓 Technical Highlights
 
 - **Async-first**: SQLAlchemy 2.0 async engine, FastAPI async handlers
@@ -808,6 +873,7 @@ FAILURE_PROBABILITY=0.0
 - **Observable**: Structured logging, Prometheus metrics, request tracing
 - **Tested**: 83% coverage, 61 tests, smoke tests in CI/CD
 - **Cloud-native**: Docker, ECS Fargate, RDS, EventBridge, CloudWatch
+- **Normalized**: Master entity system for cross-source data unification
 
 ---
 
