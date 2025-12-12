@@ -2,6 +2,15 @@
 
 A production-ready, cloud-deployed ETL pipeline that ingests cryptocurrency data from multiple sources with advanced features including schema drift detection, failure recovery, rate limiting, and comprehensive observability.
 
+## 📚 Documentation
+
+- **[README.md](README.md)** - This file (quick start, architecture, API reference)
+- **[docs/POST_EVALUATION.md](docs/POST_EVALUATION.md)** - Post-evaluation improvements & validation
+- **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** - AWS deployment guide
+- **[docs/PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md)** - Production checklist
+
+---
+
 ## 🎯 Project Status
 
 **All Requirements Complete: P0 + P1 + P2** ✅
@@ -66,7 +75,7 @@ Based on evaluator feedback, two key improvements were implemented:
 - **Stats**: 477 master entities, 535 mappings linking coins across sources
 - **Files**: `core/models.py`, `core/master_entity.py`, `migrations/versions/ae47cc2dd3ef_*.py`
 
-📖 **Detailed Documentation**: See [IMPROVEMENTS.md](IMPROVEMENTS.md) and [TESTING_SUMMARY.md](TESTING_SUMMARY.md)
+📖 **Detailed Documentation**: See [docs/POST_EVALUATION.md](docs/POST_EVALUATION.md)
 - **Smoke Test** ✅ End-to-end validation via CI/CD
 
 ---
@@ -860,7 +869,7 @@ ORDER BY c.last_updated DESC;
 - ✅ Automatic during ETL (no manual mapping required)
 - ✅ Currently tracking: 477 master entities with 535 mappings
 
-📖 **Full Documentation**: See [IMPROVEMENTS.md](IMPROVEMENTS.md#2-master-entity-normalization-data-quality)
+📖 **Full Documentation**: See [docs/POST_EVALUATION.md](docs/POST_EVALUATION.md)
 
 ---
 
