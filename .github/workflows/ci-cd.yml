@@ -227,60 +227,88 @@ jobs:
         id: get-endpoint
         run: |
           # Get ECS task public IP for smoke tests
-          echo "🔍 Fetching current API endpoint..."
+          echo "🔍 Fetching healthy running task endpoint..."
           
-          # Get the task ARN
-          TASK_ARN=$(aws ecs list-tasks \
-            --cluster kasparro-cluster \
-            --service-name kasparro-api-service \
-            --region ap-south-2 \
-            --query 'taskArns[0]' \
-            --output text)
+          MAX_ATTEMPTS=12
+          ATTEMPT=0
+          FOUND_HEALTHY_TASK=false
           
-          if [ -z "$TASK_ARN" ] || [ "$TASK_ARN" = "None" ]; then
-            echo "❌ No running tasks found"
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            ATTEMPT=$((ATTEMPT + 1))
+            echo "Attempt $ATTEMPT/$MAX_ATTEMPTS to find healthy task..."
+            
+            # Get all task ARNs for the service
+            TASK_ARNS=$(aws ecs list-tasks \
+              --cluster kasparro-cluster \
+              --service-name kasparro-api-service \
+              --desired-status RUNNING \
+              --region ap-south-2 \
+              --query 'taskArns' \
+              --output text)
+            
+            if [ -z "$TASK_ARNS" ] || [ "$TASK_ARNS" = "None" ]; then
+              echo "⚠️ No running tasks found, waiting 10s..."
+              sleep 10
+              continue
+            fi
+            
+            # Check each task for RUNNING and HEALTHY status
+            for TASK_ARN in $TASK_ARNS; do
+              TASK_INFO=$(aws ecs describe-tasks \
+                --cluster kasparro-cluster \
+                --tasks $TASK_ARN \
+                --region ap-south-2 \
+                --query 'tasks[0].{LastStatus:lastStatus,HealthStatus:healthStatus,ENI:attachments[0].details[?name==`networkInterfaceId`].value|[0]}' \
+                --output json)
+              
+              TASK_STATUS=$(echo "$TASK_INFO" | jq -r '.LastStatus')
+              HEALTH_STATUS=$(echo "$TASK_INFO" | jq -r '.HealthStatus')
+              ENI_ID=$(echo "$TASK_INFO" | jq -r '.ENI')
+              
+              echo "Task: $(basename $TASK_ARN) - Status: $TASK_STATUS, Health: $HEALTH_STATUS"
+              
+              # Accept RUNNING tasks with HEALTHY or UNKNOWN health (no health check configured)
+              if [ "$TASK_STATUS" = "RUNNING" ] && { [ "$HEALTH_STATUS" = "HEALTHY" ] || [ "$HEALTH_STATUS" = "UNKNOWN" ]; }; then
+                if [ -n "$ENI_ID" ] && [ "$ENI_ID" != "null" ]; then
+                  echo "✅ Found healthy running task: $(basename $TASK_ARN)"
+                  
+                  # Get the public IP
+                  PUBLIC_IP=$(aws ec2 describe-network-interfaces \
+                    --network-interface-ids $ENI_ID \
+                    --region ap-south-2 \
+                    --query 'NetworkInterfaces[0].Association.PublicIp' \
+                    --output text)
+                  
+                  if [ -n "$PUBLIC_IP" ] && [ "$PUBLIC_IP" != "None" ]; then
+                    API_ENDPOINT="http://${PUBLIC_IP}:8000"
+                    echo "📝 Public IP: $PUBLIC_IP"
+                    
+                    # Test if endpoint is actually reachable
+                    echo "🔍 Testing endpoint reachability..."
+                    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$API_ENDPOINT/health" --max-time 10 || echo "000")
+                    
+                    if [ "$HTTP_CODE" = "200" ]; then
+                      echo "✅ API endpoint is healthy: $API_ENDPOINT"
+                      echo "API_URL=$API_ENDPOINT" >> $GITHUB_OUTPUT
+                      FOUND_HEALTHY_TASK=true
+                      break 2
+                    else
+                      echo "⚠️ Task is running but endpoint returned HTTP $HTTP_CODE"
+                    fi
+                  fi
+                fi
+              fi
+            done
+            
+            if [ "$FOUND_HEALTHY_TASK" = false ]; then
+              echo "⚠️ No healthy responding task found yet, waiting 10s..."
+              sleep 10
+            fi
+          done
+          
+          if [ "$FOUND_HEALTHY_TASK" = false ]; then
+            echo "❌ No healthy task found after $MAX_ATTEMPTS attempts"
             exit 1
-          fi
-          
-          echo "📝 Task ARN: $TASK_ARN"
-          
-          # Get the network interface ID
-          ENI_ID=$(aws ecs describe-tasks \
-            --cluster kasparro-cluster \
-            --tasks $TASK_ARN \
-            --region ap-south-2 \
-            --query 'tasks[0].attachments[0].details[?name==`networkInterfaceId`].value' \
-            --output text)
-          
-          if [ -z "$ENI_ID" ] || [ "$ENI_ID" = "None" ]; then
-            echo "❌ No network interface found for task"
-            exit 1
-          fi
-          
-          echo "📝 ENI ID: $ENI_ID"
-          
-          # Get the public IP
-          PUBLIC_IP=$(aws ec2 describe-network-interfaces \
-            --network-interface-ids $ENI_ID \
-            --region ap-south-2 \
-            --query 'NetworkInterfaces[0].Association.PublicIp' \
-            --output text)
-          
-          if [ -z "$PUBLIC_IP" ] || [ "$PUBLIC_IP" = "None" ]; then
-            echo "❌ No public IP found for network interface"
-            exit 1
-          fi
-          
-          API_ENDPOINT="http://${PUBLIC_IP}:8000"
-          echo "✅ API endpoint: $API_ENDPOINT"
-          echo "API_URL=$API_ENDPOINT" >> $GITHUB_OUTPUT
-          
-          # Test if endpoint is reachable
-          echo "🔍 Testing endpoint reachability..."
-          if curl -s -o /dev/null -w "%{http_code}" "$API_ENDPOINT/health" --max-time 10 | grep -q "200"; then
-            echo "✅ Endpoint is reachable"
-          else
-            echo "⚠️ Endpoint may not be ready yet, smoke tests will retry"
           fi
       
       - name: Run smoke tests
