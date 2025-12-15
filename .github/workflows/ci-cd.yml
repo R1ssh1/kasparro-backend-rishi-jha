@@ -253,19 +253,28 @@ jobs:
             fi
             
             # Check each task for RUNNING and HEALTHY status
-            for TASK_ARN in $TASK_ARNS; do
+            # Sort by creation time (oldest first) to prefer stable tasks
+            SORTED_TASKS=$(aws ecs describe-tasks \
+              --cluster kasparro-cluster \
+              --tasks $TASK_ARNS \
+              --region ap-south-2 \
+              --query 'sort_by(tasks, &createdAt)[*].taskArn' \
+              --output text)
+            
+            for TASK_ARN in $SORTED_TASKS; do
               TASK_INFO=$(aws ecs describe-tasks \
                 --cluster kasparro-cluster \
                 --tasks $TASK_ARN \
                 --region ap-south-2 \
-                --query 'tasks[0].{LastStatus:lastStatus,HealthStatus:healthStatus,ENI:attachments[0].details[?name==`networkInterfaceId`].value|[0]}' \
+                --query 'tasks[0].{LastStatus:lastStatus,HealthStatus:healthStatus,ENI:attachments[0].details[?name==`networkInterfaceId`].value|[0],CreatedAt:createdAt}' \
                 --output json)
               
               TASK_STATUS=$(echo "$TASK_INFO" | jq -r '.LastStatus')
               HEALTH_STATUS=$(echo "$TASK_INFO" | jq -r '.HealthStatus')
               ENI_ID=$(echo "$TASK_INFO" | jq -r '.ENI')
+              CREATED_AT=$(echo "$TASK_INFO" | jq -r '.CreatedAt')
               
-              echo "Task: $(basename $TASK_ARN) - Status: $TASK_STATUS, Health: $HEALTH_STATUS"
+              echo "Task: $(basename $TASK_ARN) - Status: $TASK_STATUS, Health: $HEALTH_STATUS, Created: $CREATED_AT"
               
               # Accept RUNNING tasks with HEALTHY or UNKNOWN health (no health check configured)
               if [ "$TASK_STATUS" = "RUNNING" ] && { [ "$HEALTH_STATUS" = "HEALTHY" ] || [ "$HEALTH_STATUS" = "UNKNOWN" ]; }; then
@@ -288,10 +297,27 @@ jobs:
                     HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$API_ENDPOINT/health" --max-time 10 || echo "000")
                     
                     if [ "$HTTP_CODE" = "200" ]; then
-                      echo "✅ API endpoint is healthy: $API_ENDPOINT"
-                      echo "API_URL=$API_ENDPOINT" >> $GITHUB_OUTPUT
-                      FOUND_HEALTHY_TASK=true
-                      break 2
+                      # Verify stability with 3 consecutive successful health checks
+                      echo "🔍 Endpoint returned 200, verifying stability..."
+                      STABLE=true
+                      for i in 1 2 3; do
+                        sleep 2
+                        VERIFY_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$API_ENDPOINT/health" --max-time 10 || echo "000")
+                        if [ "$VERIFY_CODE" != "200" ]; then
+                          echo "⚠️ Stability check $i/3 failed (HTTP $VERIFY_CODE)"
+                          STABLE=false
+                          break
+                        fi
+                      done
+                      
+                      if [ "$STABLE" = true ]; then
+                        echo "✅ API endpoint is stable and healthy: $API_ENDPOINT"
+                        echo "API_URL=$API_ENDPOINT" >> $GITHUB_OUTPUT
+                        FOUND_HEALTHY_TASK=true
+                        break 2
+                      else
+                        echo "⚠️ Endpoint unstable, trying next task..."
+                      fi
                     else
                       echo "⚠️ Task is running but endpoint returned HTTP $HTTP_CODE"
                     fi
