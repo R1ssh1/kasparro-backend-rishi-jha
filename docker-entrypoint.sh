@@ -5,7 +5,7 @@ echo "=== Kasparro ETL Pipeline Startup ==="
 
 # Wait for database to be ready
 echo "Waiting for PostgreSQL..."
-until pg_isready -h ${DATABASE_HOST:-db} -p 5432 -U ${DATABASE_USER:-kasparro}; do
+until pg_isready -h ${DATABASE_HOST:-db} -p 5432 -U ${DATABASE_USER}; do
   echo "PostgreSQL is unavailable - sleeping"
   sleep 2
 done
@@ -15,7 +15,7 @@ echo "PostgreSQL is up - checking connection..."
 # Test database connection with retry
 max_retries=30
 counter=0
-until PGPASSWORD=${DATABASE_PASSWORD:-kasparro} psql -h ${DATABASE_HOST:-db} -U ${DATABASE_USER:-kasparro} -d ${DATABASE_NAME:-kasparro} -c '\q' 2>/dev/null; do
+until PGPASSWORD=${DATABASE_PASSWORD} psql -h ${DATABASE_HOST:-db} -U ${DATABASE_USER} -d ${DATABASE_NAME} -c '\q' 2>/dev/null; do
   counter=$((counter + 1))
   if [ $counter -gt $max_retries ]; then
     echo "Failed to connect to database after $max_retries attempts"

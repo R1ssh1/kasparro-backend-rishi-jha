@@ -9,9 +9,14 @@ from sqlalchemy.pool import NullPool
 from core.database import Base
 from core.config import settings
 
-# Test database URL - use 'db' when in Docker, 'localhost' otherwise
+# Test database URL - use environment variables
+# For CI: these are set in GitHub Actions workflow
+# For local: these should match your .env file
 DB_HOST = os.getenv("DATABASE_HOST", "localhost")
-TEST_DATABASE_URL = f"postgresql+asyncpg://kasparro:kasparro@{DB_HOST}:5432/kasparro"
+DB_USER = os.getenv("DATABASE_USER", "testuser")
+DB_PASSWORD = os.getenv("DATABASE_PASSWORD", "testpass")
+DB_NAME = os.getenv("DATABASE_NAME", "kasparro")
+TEST_DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:5432/{DB_NAME}"
 
 
 @pytest.fixture(scope="session")

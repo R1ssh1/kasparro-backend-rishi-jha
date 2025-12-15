@@ -19,43 +19,46 @@ Implemented environment-based credential management using `.env` files.
 
 **Changes Made:**
 
-1. **docker-compose.yml** - Changed to environment variables:
+1. **docker-compose.yml** - No credential-shaped defaults:
 ```yaml
-# Before
+# Before (hardcoded with fallback)
 environment:
-  POSTGRES_PASSWORD: kasparro
-
-# After
-environment:
-  POSTGRES_USER: ${DATABASE_USER:-kasparro}
   POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-kasparro}
-  POSTGRES_DB: ${DATABASE_NAME:-kasparro}
+
+# After (no credential defaults)
+environment:
+  POSTGRES_USER: ${DATABASE_USER}
+  POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+  POSTGRES_DB: ${DATABASE_NAME}
 ```
 
-2. **Created `.env`** - Local secrets (gitignored):
-```env
-DATABASE_HOST=localhost
-DATABASE_PORT=5432
-DATABASE_USER=kasparro
-DATABASE_PASSWORD=kasparro
-DATABASE_NAME=kasparro
+2. **core/config.py** - Required environment variables:
+```python
+# Before (had credential defaults)
+database_url: str = "postgresql+asyncpg://kasparro:kasparro@db:5432/kasparro"
+
+# After (no defaults - must be set)
+database_url: str
 ```
 
-3. **Created `.env.example`** - Template for developers:
+3. **Created `.env.example`** - Clear placeholders only:
 ```env
-DATABASE_HOST=localhost
+DATABASE_HOST=REPLACE_WITH_DB_HOST
 DATABASE_PORT=5432
-DATABASE_USER=your_db_user
-DATABASE_PASSWORD=your_secure_password
-DATABASE_NAME=your_db_name
+DATABASE_USER=REPLACE_WITH_DB_USER
+DATABASE_PASSWORD=REPLACE_WITH_DB_PASSWORD
+DATABASE_NAME=REPLACE_WITH_DB_NAME
+DATABASE_URL=postgresql+asyncpg://USER:PASSWORD@HOST:PORT/DATABASE
 ```
+
+4. **Created `.env`** - Real secrets (gitignored, not committed)
 
 ### Benefits
-- ✅ No hardcoded secrets in version control
-- ✅ Easy credential rotation without code changes
-- ✅ Follows 12-factor app principles
-- ✅ Secure defaults with fallback values
-- ✅ Separate credentials for different environments
+- ✅ **Zero credential-shaped values in repo** - Impossible to confuse examples with real secrets
+- ✅ **Explicit configuration required** - Fails fast if credentials not set
+- ✅ **Clear placeholders** - `REPLACE_WITH_*` makes it obvious what needs changing
+- ✅ **Follows 12-factor app principles** - All config from environment
+- ✅ **No accidental leaks** - No defaults that look like real credentials
 
 ---
 
@@ -355,13 +358,15 @@ INFO:root:processed_master_entities: 10/10
 
 **Platform:** AWS ECS Fargate (ap-south-2)
 **Database:** RDS PostgreSQL 15.10
-**URL:** http://18.61.81.84:8000
+**Canonical URL:** `http://18.60.253.14:8000`
 
 **Quick Links:**
-- Dashboard: http://18.61.81.84:8000
-- API Docs: http://18.61.81.84:8000/docs
-- Health: http://18.61.81.84:8000/health
-- Metrics: http://18.61.81.84:8000/metrics
+- Dashboard: http://18.60.253.14:8000
+- API Docs: http://18.60.253.14:8000/docs
+- Health: http://18.60.253.14:8000/health
+- Metrics: http://18.60.253.14:8000/metrics
+
+> **Note**: ECS uses dynamic IPs. If task is redeployed, run `terraform/get-api-ip.ps1` for current URL.
 
 **Master Entity Statistics (Production):**
 ```bash
@@ -370,7 +375,7 @@ cd terraform
 ./get-api-ip.ps1
 
 # Query master entities via API
-curl http://18.61.81.84:8000/api/v1/crypto/coins?limit=10
+curl http://18.60.253.14:8000/api/v1/crypto/coins?limit=10
 
 # Check master entity mappings
 # (Would require new API endpoint for direct master entity queries)

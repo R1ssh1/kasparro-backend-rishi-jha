@@ -7,8 +7,8 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
     
     # Database
-    database_url: str = "postgresql+asyncpg://kasparro:kasparro@db:5432/kasparro"
-    database_url_sync: str = "postgresql://kasparro:kasparro@db:5432/kasparro"
+    database_url: str
+    database_url_sync: str
     
     # API Keys
     coingecko_api_key: str

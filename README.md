@@ -2,6 +2,20 @@
 
 A production-ready, cloud-deployed ETL pipeline that ingests cryptocurrency data from multiple sources with advanced features including schema drift detection, failure recovery, rate limiting, and comprehensive observability.
 
+## 🌐 Production Deployment
+
+**Canonical URL**: `http://18.60.253.14:8000`
+
+**Quick Access:**
+- 🏠 [Dashboard](http://18.60.253.14:8000) - Interactive cryptocurrency data visualization
+- 📚 [API Docs](http://18.60.253.14:8000/docs) - OpenAPI interactive documentation
+- 💚 [Health Check](http://18.60.253.14:8000/health) - System status & ETL monitoring
+- 📊 [Metrics](http://18.60.253.14:8000/metrics) - Prometheus metrics endpoint
+
+> **Note**: Using AWS ECS Fargate with dynamic IPs. Run `terraform/get-api-ip.ps1` if URL changes after redeployment.
+
+---
+
 ## 📚 Documentation
 
 - **[README.md](README.md)** - This file (quick start, architecture, API reference)
@@ -144,18 +158,19 @@ Based on evaluator feedback, two key improvements were implemented:
 # Copy environment template
 cp .env.example .env
 
-# Edit .env with your credentials:
-# Database Configuration (used by docker-compose)
-# DATABASE_USER=kasparro
-# DATABASE_PASSWORD=your_secure_password
-# DATABASE_NAME=kasparro
-#
-# API Keys
-# COINGECKO_API_KEY=your_coingecko_key
-# ADMIN_API_KEY=your_admin_key
+# Edit .env and replace ALL placeholders with real values:
+# DATABASE_HOST=db                             # Use 'db' for Docker, 'localhost' for local
+# DATABASE_USER=REPLACE_WITH_DB_USER           # e.g., mydbuser
+# DATABASE_PASSWORD=REPLACE_WITH_DB_PASSWORD   # Strong password
+# DATABASE_NAME=REPLACE_WITH_DB_NAME           # e.g., kasparro
+# COINGECKO_API_KEY=REPLACE_WITH_COINGECKO_API_KEY
+# ADMIN_API_KEY=REPLACE_WITH_ADMIN_API_KEY
 ```
 
-**Security Note**: All credentials are now sourced from `.env` file - no hardcoded secrets in `docker-compose.yml`
+**Security Note**: 
+- `.env.example` contains NO real credentials - only placeholders
+- You MUST replace all `REPLACE_WITH_*` values before running
+- Never commit `.env` to version control (already in `.gitignore`)
 
 ### 2. Start Services
 
@@ -531,27 +546,28 @@ cd terraform
 ./get-api-ip.ps1
 ```
 
-**Example Output:**
-```
-Task ARN: arn:aws:ecs:ap-south-2:743957503839:task/kasparro-cluster/a8962a1c58494ab8b10f5c8a49afa941
-Public IP: 18.61.81.84
+**Canonical Production URL**: `http://18.60.253.14:8000`
 
-API is available at: http://18.61.81.84:8000
-```
-
-**Current Production URL**: `http://18.61.81.84:8000` (as of latest deployment)
+> **Note**: ECS Fargate tasks use dynamic IPs. Run `terraform/get-api-ip.ps1` to get the latest URL if the task has been redeployed.
 
 **Quick Test:**
 ```bash
-# Health check
-curl http://18.61.81.84:8000/health
+# Health check (public)
+curl http://18.60.253.14:8000/health
 
 # View API documentation
-# Open in browser: http://18.61.81.84:8000/docs
+# Open in browser: http://18.60.253.14:8000/docs
 
 # Interactive dashboard
-# Open in browser: http://18.61.81.84:8000
+# Open in browser: http://18.60.253.14:8000
 ```
+
+**Available Endpoints:**
+- 🟢 `/health` - Public health check (database status, ETL status)
+- 🟢 `/docs` - OpenAPI interactive documentation
+- 🟢 `/metrics` - Prometheus metrics endpoint
+- 🔒 `/stats` - ETL statistics (requires X-API-Key header)
+- 🔒 `/api/v1/crypto/*` - Data endpoints (some require auth)
 
 ### Monitoring
 
@@ -936,19 +952,15 @@ This project successfully implements a **production-ready cryptocurrency data ag
 
 ### 🌐 Accessing the Deployment
 
-**Current Production URL**: `http://18.61.81.84:8000`
+**Canonical Production URL**: `http://18.60.253.14:8000`
 
-To get the latest deployment URL (IP changes with each deployment):
-```powershell
-cd terraform
-./get-api-ip.ps1
-```
+> **Note**: ECS Fargate uses dynamic IPs. If task is redeployed, run `terraform/get-api-ip.ps1` for the current URL.
 
 **Quick Links:**
-- Dashboard: http://18.61.81.84:8000
-- API Documentation: http://18.61.81.84:8000/docs
-- Health Check: http://18.61.81.84:8000/health
-- Prometheus Metrics: http://18.61.81.84:8000/metrics
+- Dashboard: http://18.60.253.14:8000
+- API Documentation: http://18.60.253.14:8000/docs
+- Health Check: http://18.60.253.14:8000/health (Public)
+- Prometheus Metrics: http://18.60.253.14:8000/metrics
 
 ---
 

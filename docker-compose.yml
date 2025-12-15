@@ -5,15 +5,15 @@ services:
     image: postgres:15-alpine
     container_name: kasparro-db
     environment:
-      POSTGRES_USER: ${DATABASE_USER:-kasparro}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-kasparro}
-      POSTGRES_DB: ${DATABASE_NAME:-kasparro}
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DATABASE_USER:-kasparro}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${DATABASE_USER}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -27,12 +27,12 @@ services:
     container_name: kasparro-api
     command: uvicorn api.main:app --host 0.0.0.0 --port 8000
     environment:
-      DATABASE_URL: postgresql+asyncpg://${DATABASE_USER:-kasparro}:${DATABASE_PASSWORD:-kasparro}@${DATABASE_HOST:-db}:${DATABASE_PORT:-5432}/${DATABASE_NAME:-kasparro}
-      DATABASE_URL_SYNC: postgresql://${DATABASE_USER:-kasparro}:${DATABASE_PASSWORD:-kasparro}@${DATABASE_HOST:-db}:${DATABASE_PORT:-5432}/${DATABASE_NAME:-kasparro}
+      DATABASE_URL: postgresql+asyncpg://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST:-db}:${DATABASE_PORT:-5432}/${DATABASE_NAME}
+      DATABASE_URL_SYNC: postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST:-db}:${DATABASE_PORT:-5432}/${DATABASE_NAME}
       DATABASE_HOST: ${DATABASE_HOST:-db}
-      DATABASE_USER: ${DATABASE_USER:-kasparro}
-      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-kasparro}
-      DATABASE_NAME: ${DATABASE_NAME:-kasparro}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_NAME: ${DATABASE_NAME}
       COINGECKO_API_KEY: ${COINGECKO_API_KEY}
       ADMIN_API_KEY: ${ADMIN_API_KEY}
       APP_ENV: ${APP_ENV:-development}
@@ -62,12 +62,12 @@ services:
     entrypoint: [ "/app/docker-entrypoint-worker.sh" ]
     command: python -m worker.scheduler
     environment:
-      DATABASE_URL: postgresql+asyncpg://${DATABASE_USER:-kasparro}:${DATABASE_PASSWORD:-kasparro}@${DATABASE_HOST:-db}:${DATABASE_PORT:-5432}/${DATABASE_NAME:-kasparro}
-      DATABASE_URL_SYNC: postgresql://${DATABASE_USER:-kasparro}:${DATABASE_PASSWORD:-kasparro}@${DATABASE_HOST:-db}:${DATABASE_PORT:-5432}/${DATABASE_NAME:-kasparro}
+      DATABASE_URL: postgresql+asyncpg://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST:-db}:${DATABASE_PORT:-5432}/${DATABASE_NAME}
+      DATABASE_URL_SYNC: postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST:-db}:${DATABASE_PORT:-5432}/${DATABASE_NAME}
       DATABASE_HOST: ${DATABASE_HOST:-db}
-      DATABASE_USER: ${DATABASE_USER:-kasparro}
-      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-kasparro}
-      DATABASE_NAME: ${DATABASE_NAME:-kasparro}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_NAME: ${DATABASE_NAME}
       COINGECKO_API_KEY: ${COINGECKO_API_KEY}
       APP_ENV: ${APP_ENV:-development}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
