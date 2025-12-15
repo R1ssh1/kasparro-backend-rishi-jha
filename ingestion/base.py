@@ -351,6 +351,8 @@ class BaseIngestion(ABC):
             
         except Exception as e:
             self.logger.error(f"ETL run failed: {str(e)}", exc_info=True)
+            # Rollback the failed transaction before updating checkpoint
+            await self.session.rollback()
             await self.update_checkpoint(None, "failed", str(e))
             await self.update_run_record("failed", 0, str(e))
             raise
