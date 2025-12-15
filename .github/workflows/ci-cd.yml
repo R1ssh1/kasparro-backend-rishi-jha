@@ -192,14 +192,7 @@ jobs:
             --region ap-south-2
           
           echo "✅ API deployment initiated"
-      
-      - name: Wait for deployment
-        run: |
-          echo "⏳ Waiting for service to stabilize..."
-          aws ecs wait services-stable \
-            --cluster kasparro-cluster \
-            --services kasparro-api-service \
-            --region ap-south-2 || echo "⚠️ Timeout (may still be deploying)"
+          echo "ℹ️ New tasks will start while old tasks drain (no downtime)"
       
       - name: Deployment summary
         run: |
@@ -226,8 +219,9 @@ jobs:
       
       - name: Wait for new deployment to stabilize
         run: |
-          echo "⏳ Waiting 60 seconds for new containers to start..."
-          sleep 60
+          echo "⏳ Waiting for new containers to start and become healthy..."
+          echo "ℹ️ This may take 2-3 minutes as old tasks drain and new tasks start"
+          sleep 120
       
       - name: Get API endpoint
         id: get-endpoint
