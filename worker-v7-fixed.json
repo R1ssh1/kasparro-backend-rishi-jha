@@ -11,7 +11,7 @@
     "containerDefinitions":  [
                                  {
                                      "name":  "worker",
-                                     "image":  "ghcr.io/r1ssh1/kasparro-backend-rishi-jha:main",
+                                     "image":  "ghcr.io/r1ssh1/kasparro-backend-rishi-jha:latest",
                                      "essential":  true,
                                      "entryPoint":  [
                                                         "python",

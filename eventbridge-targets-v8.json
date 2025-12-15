@@ -1,0 +1,24 @@
+[
+  {
+    "Id": "1",
+    "Arn": "arn:aws:ecs:ap-south-2:743957503839:cluster/kasparro-cluster",
+    "RoleArn": "arn:aws:iam::743957503839:role/ecsEventsRole",
+    "EcsParameters": {
+      "TaskDefinitionArn": "arn:aws:ecs:ap-south-2:743957503839:task-definition/kasparro-worker:8",
+      "TaskCount": 1,
+      "LaunchType": "FARGATE",
+      "NetworkConfiguration": {
+        "awsvpcConfiguration": {
+          "Subnets": [
+            "subnet-0f1b40c796e534d74",
+            "subnet-076e2d9a92f0e9a9e"
+          ],
+          "SecurityGroups": [
+            "sg-02a8e336b3cc58371"
+          ],
+          "AssignPublicIp": "ENABLED"
+        }
+      }
+    }
+  }
+]
