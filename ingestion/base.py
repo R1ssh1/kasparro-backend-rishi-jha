@@ -180,7 +180,8 @@ class BaseIngestion(ABC):
                     total=len(upserted_coins)
                 )
         except Exception as e:
-            # If master_entities table doesn't exist yet, just log and continue
+            # If master_entities table doesn't exist yet, rollback transaction and continue
+            await self.session.rollback()
             self.logger.warning(
                 "skipped_master_entity_processing",
                 reason=str(e)[:200]
