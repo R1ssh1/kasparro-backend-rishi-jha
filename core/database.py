@@ -13,9 +13,8 @@ async_engine = create_async_engine(
     max_overflow=10,
     pool_timeout=30,
     connect_args={
-        "connect_timeout": 10,
-        "command_timeout": 60,
-        "server_settings": {"application_name": "kasparro_worker"}
+        "timeout": 10,
+        "server_settings": {"application_name": "kasparro_app"}
     }
 )
 
