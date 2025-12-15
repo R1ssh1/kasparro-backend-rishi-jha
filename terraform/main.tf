@@ -138,6 +138,14 @@ resource "aws_security_group" "rds" {
     description     = "PostgreSQL from ECS tasks"
   }
 
+  ingress {
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = [aws_vpc.main.cidr_block]
+    description = "PostgreSQL from VPC"
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -153,7 +161,7 @@ resource "aws_security_group" "rds" {
 # RDS PostgreSQL
 resource "aws_db_subnet_group" "main" {
   name       = "kasparro-db-subnet-group"
-  subnet_ids = aws_subnet.private[*].id
+  subnet_ids = concat(aws_subnet.public[*].id, aws_subnet.private[*].id)  # Include both for flexibility
 
   tags = {
     Name = "kasparro-db-subnet-group"
@@ -174,6 +182,7 @@ resource "aws_db_instance" "postgres" {
   
   db_subnet_group_name   = aws_db_subnet_group.main.name
   vpc_security_group_ids = [aws_security_group.rds.id]
+  publicly_accessible    = true  # Enable for ECS task connectivity
   
   backup_retention_period = 7
   backup_window          = "03:00-04:00"
@@ -240,13 +249,22 @@ resource "aws_iam_role" "ecs_task" {
   })
 }
 
-# CloudWatch Log Group
+# CloudWatch Log Groups
 resource "aws_cloudwatch_log_group" "ecs" {
   name              = "/ecs/kasparro-api"
   retention_in_days = 30
 
   tags = {
     Name = "kasparro-ecs-logs"
+  }
+}
+
+resource "aws_cloudwatch_log_group" "worker" {
+  name              = "/ecs/kasparro-worker"
+  retention_in_days = 30
+
+  tags = {
+    Name = "kasparro-worker-logs"
   }
 }
 
@@ -414,6 +432,7 @@ resource "aws_ecs_task_definition" "worker" {
     name  = "worker"
     image = var.docker_image
     
+    entryPoint = ["/app/docker-entrypoint-worker.sh"]
     command = ["python", "-m", "worker.scheduler"]
     
     essential = true
@@ -475,7 +494,7 @@ resource "aws_ecs_task_definition" "worker" {
     logConfiguration = {
       logDriver = "awslogs"
       options = {
-        "awslogs-group"         = aws_cloudwatch_log_group.ecs.name
+        "awslogs-group"         = aws_cloudwatch_log_group.worker.name
         "awslogs-region"        = var.aws_region
         "awslogs-stream-prefix" = "worker"
       }
