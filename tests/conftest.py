@@ -13,9 +13,9 @@ from core.config import settings
 # For CI: these are set in GitHub Actions workflow
 # For local: these should match your .env file
 DB_HOST = os.getenv("DATABASE_HOST", "localhost")
-DB_USER = os.getenv("DATABASE_USER", "testuser")
-DB_PASSWORD = os.getenv("DATABASE_PASSWORD", "testpass")
-DB_NAME = os.getenv("DATABASE_NAME", "kasparro")
+DB_USER = os.getenv("DATABASE_USER", "ci_test_user")
+DB_PASSWORD = os.getenv("DATABASE_PASSWORD", "ci_test_password_not_real")
+DB_NAME = os.getenv("DATABASE_NAME", "test_database")
 TEST_DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:5432/{DB_NAME}"
 
 
