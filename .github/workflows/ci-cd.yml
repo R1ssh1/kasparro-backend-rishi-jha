@@ -180,7 +180,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+          aws-region: ap-south-2
       
       - name: Update ECS service (API)
         run: |
@@ -189,7 +189,7 @@ jobs:
             --cluster kasparro-cluster \
             --service kasparro-api-service \
             --force-new-deployment \
-            --region ${{ secrets.AWS_REGION || 'ap-south-2' }}
+            --region ap-south-2
           
           echo "✅ API deployment initiated"
       
@@ -199,7 +199,7 @@ jobs:
           aws ecs wait services-stable \
             --cluster kasparro-cluster \
             --services kasparro-api-service \
-            --region ${{ secrets.AWS_REGION || 'ap-south-2' }} || echo "⚠️ Timeout (may still be deploying)"
+            --region ap-south-2 || echo "⚠️ Timeout (may still be deploying)"
       
       - name: Deployment summary
         run: |
@@ -222,7 +222,12 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+          aws-region: ap-south-2
+      
+      - name: Wait for new deployment to stabilize
+        run: |
+          echo "⏳ Waiting 60 seconds for new containers to start..."
+          sleep 60
       
       - name: Get API endpoint
         id: get-endpoint
@@ -243,6 +248,8 @@ jobs:
             exit 1
           fi
           
+          echo "📝 Task ARN: $TASK_ARN"
+          
           # Get the network interface ID
           ENI_ID=$(aws ecs describe-tasks \
             --cluster kasparro-cluster \
@@ -251,6 +258,13 @@ jobs:
             --query 'tasks[0].attachments[0].details[?name==`networkInterfaceId`].value' \
             --output text)
           
+          if [ -z "$ENI_ID" ] || [ "$ENI_ID" = "None" ]; then
+            echo "❌ No network interface found for task"
+            exit 1
+          fi
+          
+          echo "📝 ENI ID: $ENI_ID"
+          
           # Get the public IP
           PUBLIC_IP=$(aws ec2 describe-network-interfaces \
             --network-interface-ids $ENI_ID \
@@ -258,9 +272,22 @@ jobs:
             --query 'NetworkInterfaces[0].Association.PublicIp' \
             --output text)
           
+          if [ -z "$PUBLIC_IP" ] || [ "$PUBLIC_IP" = "None" ]; then
+            echo "❌ No public IP found for network interface"
+            exit 1
+          fi
+          
           API_ENDPOINT="http://${PUBLIC_IP}:8000"
           echo "✅ API endpoint: $API_ENDPOINT"
           echo "API_URL=$API_ENDPOINT" >> $GITHUB_OUTPUT
+          
+          # Test if endpoint is reachable
+          echo "🔍 Testing endpoint reachability..."
+          if curl -s -o /dev/null -w "%{http_code}" "$API_ENDPOINT/health" --max-time 10 | grep -q "200"; then
+            echo "✅ Endpoint is reachable"
+          else
+            echo "⚠️ Endpoint may not be ready yet, smoke tests will retry"
+          fi
       
       - name: Run smoke tests
         env:

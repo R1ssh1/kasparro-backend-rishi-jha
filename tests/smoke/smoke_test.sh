@@ -38,17 +38,43 @@ log_warn() {
     echo -e "${YELLOW}⚠ WARNING:${NC} $1"
 }
 
-# Test 1: Service Running
+# Verify API_URL is set
+if [ -z "$API_URL" ]; then
+    echo -e "${RED}❌ ERROR: API_URL is not set${NC}"
+    exit 1
+fi
+
+echo -e "${BOLD}Testing API at: ${API_URL}${NC}"
+echo ""
+
+# Test 1: Service Running (with retry)
 log_test "1/10" "Service Running"
-if curl -s -o /dev/null -w "%{http_code}" "$API_URL/" | grep -q "200"; then
+MAX_RETRIES=5
+RETRY_COUNT=0
+SERVICE_UP=false
+
+while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$API_URL/" 2>/dev/null || echo "000")
+    if [ "$HTTP_CODE" = "200" ]; then
+        SERVICE_UP=true
+        break
+    fi
+    RETRY_COUNT=$((RETRY_COUNT + 1))
+    if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+        echo "  Attempt $RETRY_COUNT/$MAX_RETRIES failed (HTTP $HTTP_CODE), retrying in 5s..."
+        sleep 5
+    fi
+done
+
+if [ "$SERVICE_UP" = true ]; then
     log_pass "Service is responding"
 else
-    log_fail "Service is not responding"
+    log_fail "Service is not responding after $MAX_RETRIES attempts"
 fi
 
 # Test 2: Health Endpoint
 log_test "2/10" "Health Check"
-HEALTH_RESPONSE=$(curl -s "$API_URL/health")
+HEALTH_RESPONSE=$(curl -s --max-time 10 "$API_URL/health" 2>/dev/null || echo "{}")
 if echo "$HEALTH_RESPONSE" | grep -q '"status":"healthy"'; then
     log_pass "Health endpoint returns healthy status"
 else
@@ -65,7 +91,7 @@ fi
 
 # Test 4: Data Endpoint (Public)
 log_test "4/10" "Public Data Endpoint"
-DATA_RESPONSE=$(curl -s -w "\n%{http_code}" "$API_URL/data?limit=5")
+DATA_RESPONSE=$(curl -s -w "\n%{http_code}" --max-time 10 "$API_URL/data?limit=5" 2>/dev/null || echo -e "\n000")
 HTTP_CODE=$(echo "$DATA_RESPONSE" | tail -n1)
 DATA_BODY=$(echo "$DATA_RESPONSE" | head -n-1)
 
@@ -82,7 +108,7 @@ fi
 
 # Test 5: Pagination
 log_test "5/10" "Pagination Support"
-PAGE2_RESPONSE=$(curl -s "$API_URL/data?limit=5&offset=5")
+PAGE2_RESPONSE=$(curl -s --max-time 10 "$API_URL/data?limit=5&offset=5" 2>/dev/null || echo "{}")
 if echo "$PAGE2_RESPONSE" | grep -q '"symbol":'; then
     log_pass "Pagination works (offset parameter)"
 else
@@ -91,7 +117,7 @@ fi
 
 # Test 6: Filtering
 log_test "6/10" "Filtering Support"
-FILTER_RESPONSE=$(curl -s "$API_URL/data?symbol=bitcoin&limit=1")
+FILTER_RESPONSE=$(curl -s --max-time 10 "$API_URL/data?symbol=bitcoin&limit=1" 2>/dev/null || echo "{}")
 if echo "$FILTER_RESPONSE" | grep -q '"symbol":"bitcoin"'; then
     log_pass "Filtering works (symbol parameter)"
 else
@@ -100,7 +126,7 @@ fi
 
 # Test 7: Protected Endpoint - Invalid Auth
 log_test "7/10" "Protected Endpoint - Invalid Auth"
-INVALID_AUTH_RESPONSE=$(curl -s -w "\n%{http_code}" -H "X-API-Key: invalid_key_12345" "$API_URL/stats")
+INVALID_AUTH_RESPONSE=$(curl -s -w "\n%{http_code}" --max-time 10 -H "X-API-Key: invalid_key_12345" "$API_URL/stats" 2>/dev/null || echo -e "\n000")
 INVALID_HTTP_CODE=$(echo "$INVALID_AUTH_RESPONSE" | tail -n1)
 
 if [ "$INVALID_HTTP_CODE" = "401" ]; then
@@ -114,7 +140,7 @@ fi
 # Test 8: Protected Endpoint - Valid Auth (if API_KEY provided)
 log_test "8/10" "Protected Endpoint - Valid Auth"
 if [ -n "$API_KEY" ]; then
-    VALID_AUTH_RESPONSE=$(curl -s -w "\n%{http_code}" -H "X-API-Key: $API_KEY" "$API_URL/stats")
+    VALID_AUTH_RESPONSE=$(curl -s -w "\n%{http_code}" --max-time 10 -H "X-API-Key: $API_KEY" "$API_URL/stats" 2>/dev/null || echo -e "\n000")
     VALID_HTTP_CODE=$(echo "$VALID_AUTH_RESPONSE" | tail -n1)
     
     if [ "$VALID_HTTP_CODE" = "200" ]; then
@@ -128,7 +154,7 @@ fi
 
 # Test 9: Metrics Endpoint
 log_test "9/10" "Prometheus Metrics"
-METRICS_RESPONSE=$(curl -s "$API_URL/metrics")
+METRICS_RESPONSE=$(curl -s --max-time 10 "$API_URL/metrics" 2>/dev/null || echo "")
 if echo "$METRICS_RESPONSE" | grep -q "# HELP"; then
     METRIC_COUNT=$(echo "$METRICS_RESPONSE" | grep -c "# HELP" || true)
     log_pass "Metrics endpoint returns Prometheus format ($METRIC_COUNT metrics)"
@@ -139,7 +165,7 @@ fi
 # Test 10: Run Comparison (if API_KEY provided)
 log_test "10/12" "Run Comparison Endpoint"
 if [ -n "$API_KEY" ]; then
-    RUNS_RESPONSE=$(curl -s -w "\n%{http_code}" -H "X-API-Key: $API_KEY" "$API_URL/runs")
+    RUNS_RESPONSE=$(curl -s -w "\n%{http_code}" --max-time 10 -H "X-API-Key: $API_KEY" "$API_URL/runs" 2>/dev/null || echo -e "\n000")
     RUNS_HTTP_CODE=$(echo "$RUNS_RESPONSE" | tail -n1)
     
     if [ "$RUNS_HTTP_CODE" = "200" ]; then
@@ -156,7 +182,7 @@ log_test "11/12" "ETL Recovery After Restart"
 if command -v docker &> /dev/null && [ "$SKIP_DOCKER_TESTS" != "true" ]; then
     # Get initial run count
     if [ -n "$API_KEY" ]; then
-        INITIAL_RUNS=$(curl -s -H "X-API-Key: $API_KEY" "$API_URL/runs" | grep -o '"run_id"' | wc -l || echo "0")
+        INITIAL_RUNS=$(curl -s --max-time 10 -H "X-API-Key: $API_KEY" "$API_URL/runs" 2>/dev/null | grep -o '"run_id"' | wc -l || echo "0")
         
         # Restart worker container (only if running locally with docker-compose)
         if docker ps --format '{{.Names}}' | grep -q "kasparro-worker"; then
@@ -185,7 +211,7 @@ log_test "12/12" "Rate Limiting Check"
 RATE_LIMIT_ERRORS=0
 # Send 10 rapid requests to check rate limiting behavior
 for i in {1..10}; do
-    STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/data?limit=1")
+    STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "$API_URL/data?limit=1" 2>/dev/null || echo "000")
     if [ "$STATUS" = "429" ]; then
         ((RATE_LIMIT_ERRORS++))
     fi
