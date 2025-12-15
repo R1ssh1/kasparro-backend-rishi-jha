@@ -158,25 +158,32 @@ class BaseIngestion(ABC):
         
         self.logger.info(f"Upserted {len(normalized_records)} normalized records")
         
-        # Process master entities for upserted coins
-        master_entity_count = 0
-        for row in upserted_coins:
-            # Fetch the complete coin object
-            coin_result = await self.session.execute(
-                select(Coin).where(Coin.id == row.id)
-            )
-            coin = coin_result.scalar_one_or_none()
+        # Process master entities for upserted coins (skip if table doesn't exist yet)
+        try:
+            master_entity_count = 0
+            for row in upserted_coins:
+                # Fetch the complete coin object
+                coin_result = await self.session.execute(
+                    select(Coin).where(Coin.id == row.id)
+                )
+                coin = coin_result.scalar_one_or_none()
+                
+                if coin:
+                    success = await process_coin_for_master_entity(self.session, coin)
+                    if success:
+                        master_entity_count += 1
             
-            if coin:
-                success = await process_coin_for_master_entity(self.session, coin)
-                if success:
-                    master_entity_count += 1
-        
-        if master_entity_count > 0:
-            self.logger.info(
-                "processed_master_entities",
-                processed=master_entity_count,
-                total=len(upserted_coins)
+            if master_entity_count > 0:
+                self.logger.info(
+                    "processed_master_entities",
+                    processed=master_entity_count,
+                    total=len(upserted_coins)
+                )
+        except Exception as e:
+            # If master_entities table doesn't exist yet, just log and continue
+            self.logger.warning(
+                "skipped_master_entity_processing",
+                reason=str(e)[:200]
             )
         
         return len(normalized_records)
