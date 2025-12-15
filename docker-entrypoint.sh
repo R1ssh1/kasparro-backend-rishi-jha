@@ -35,6 +35,11 @@ else
   echo "Migration failed!"
   exit 1
 fi
+
+# Ensure master_entities tables exist (in case alembic is out of sync)
+echo "Verifying master_entities tables..."
+python create_master_entities.py || echo "Warning: Failed to verify master_entities tables"
+
 echo "Starting application: $@"
 
 # Execute the main command
