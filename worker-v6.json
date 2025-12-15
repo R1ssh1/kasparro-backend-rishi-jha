@@ -1,0 +1,123 @@
+﻿{
+    "taskDefinitionArn": "arn:aws:ecs:ap-south-2:743957503839:task-definition/kasparro-worker:6",
+    "containerDefinitions": [
+        {
+            "name": "worker",
+            "image": "ghcr.io/r1ssh1/kasparro-backend-rishi-jha:latest",
+            "cpu": 0,
+            "portMappings": [],
+            "essential": true,
+            "entryPoint": [
+                "python",
+                "-m",
+                "worker.scheduler"
+            ],
+            "environment": [
+                {
+                    "name": "ETL_SCHEDULE_MINUTES",
+                    "value": "60"
+                },
+                {
+                    "name": "APP_ENV",
+                    "value": "production"
+                },
+                {
+                    "name": "DATABASE_URL",
+                    "value": "postgresql+asyncpg://kasparro_admin:KasparroSecure2024!@kasparro-postgres.cp8acayqwl5q.ap-south-2.rds.amazonaws.com:5432/kasparro"
+                },
+                {
+                    "name": "DATABASE_NAME",
+                    "value": "kasparro"
+                },
+                {
+                    "name": "COINGECKO_RATE_LIMIT",
+                    "value": "30"
+                },
+                {
+                    "name": "DATABASE_HOST",
+                    "value": "kasparro-postgres.cp8acayqwl5q.ap-south-2.rds.amazonaws.com"
+                },
+                {
+                    "name": "DATABASE_URL_SYNC",
+                    "value": "postgresql://kasparro_admin:KasparroSecure2024!@kasparro-postgres.cp8acayqwl5q.ap-south-2.rds.amazonaws.com:5432/kasparro"
+                },
+                {
+                    "name": "LOG_LEVEL",
+                    "value": "INFO"
+                },
+                {
+                    "name": "DATABASE_USER",
+                    "value": "kasparro_admin"
+                },
+                {
+                    "name": "DATABASE_PASSWORD",
+                    "value": "KasparroSecure2024!"
+                }
+            ],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "secrets": [
+                {
+                    "name": "COINGECKO_API_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:ap-south-2:743957503839:secret:kasparro/app-secrets-V9XGVq:COINGECKO_API_KEY::"
+                },
+                {
+                    "name": "ADMIN_API_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:ap-south-2:743957503839:secret:kasparro/app-secrets-V9XGVq:ADMIN_API_KEY::"
+                }
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/kasparro-worker",
+                    "awslogs-region": "ap-south-2",
+                    "awslogs-stream-prefix": "worker"
+                }
+            },
+            "systemControls": []
+        }
+    ],
+    "family": "kasparro-worker",
+    "taskRoleArn": "arn:aws:iam::743957503839:role/kasparro-ecs-task-role",
+    "executionRoleArn": "arn:aws:iam::743957503839:role/kasparro-ecs-task-execution-role",
+    "networkMode": "awsvpc",
+    "revision": 6,
+    "volumes": [],
+    "status": "ACTIVE",
+    "requiresAttributes": [
+        {
+            "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+        },
+        {
+            "name": "ecs.capability.execution-role-awslogs"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+        },
+        {
+            "name": "ecs.capability.secrets.asm.environment-variables"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.task-iam-role"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+        },
+        {
+            "name": "ecs.capability.task-eni"
+        }
+    ],
+    "placementConstraints": [],
+    "compatibilities": [
+        "EC2",
+        "MANAGED_INSTANCES",
+        "FARGATE"
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "256",
+    "memory": "512",
+    "registeredAt": "2025-12-15T23:19:07.610000+05:30",
+    "registeredBy": "arn:aws:iam::743957503839:root"
+}

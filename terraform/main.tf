@@ -432,8 +432,7 @@ resource "aws_ecs_task_definition" "worker" {
     name  = "worker"
     image = var.docker_image
     
-    entryPoint = ["/app/docker-entrypoint-worker.sh"]
-    command = ["python", "-m", "worker.scheduler"]
+    entryPoint = ["python", "-m", "worker.scheduler"]
     
     essential = true
     
